@@ -1,0 +1,48 @@
+
+######## Query Params ##############
+
+# where all the data files are stored
+# such as query results, background estimates, etc
+query_data_folder data/normal/query_results/
+
+# should the max number of queryable random points
+# random points be used? Setting it true ignores the
+# the value in random_size
+random_size_max true
+random_size  0
+random_start 0
+
+cluster_size_max false
+cluster_size  0
+cluster_start 0
+
+#should only galaxies be selected or all?
+query_galaxy_only true
+
+# to how many r200 should be queried around clusters?
+# NOTE: anything greater than 1.0 requires to be queried
+# using galaxies only. Oherwise the return limit is
+# exceed. 
+r200_factor 1.0
+
+######## Processing Param #############
+
+# should the background be forced to be calculated?
+# the background only calculates once.
+force_make_background false
+
+background_folder data/normal/background
+
+red_sequence false
+
+######## Graphs Param ##################
+
+
+z_bins       10
+z_bins_start 0.0
+z_bins_end   0.6
+
+mass_bins        10
+mass_bins_start  13.0
+mass_bins_end    16.0
+

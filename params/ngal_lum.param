@@ -1,0 +1,38 @@
+
+######## Query Params ##############
+
+# where all the data files are stored
+# such as query results, background estimates, etc
+query_data_folder data/normal/query_results/
+
+
+######## Processing Param #############
+
+
+# what type of galaxies 
+# 1 = all galaxies
+# 2 = red squence galaxies
+# 3 = non-red squence galaxies 
+galaxy_type 1
+
+# weight of galaxies
+# 1 = radial profile by counts
+# 2 = radial profile by luminosity 
+galaxy_weight 2
+background_folder data/normal/background/
+
+
+######## Graphs Param ##################
+
+# bins for the final cluster binning
+
+z_bins       10
+z_bins_start 0.0
+z_bins_end   0.6
+
+
+# note: mass is 10^x
+mass_bins        10
+mass_bins_start  13.0
+mass_bins_end    16.0
+
