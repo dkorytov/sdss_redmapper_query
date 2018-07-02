@@ -81,6 +81,8 @@ def get_clstr(name,folder,num,start=0,till_end=False):
     j = start
     if(till_end):
         j = num-1
+    print folder+'query_results.hdf5'
+    print folder+name+'_mask.hdf5'
     hquery_results = h5py.File(folder+'query_results.hdf5','r')
     hmask_results  = h5py.File(folder+name+'_mask.hdf5','r')
     print "\t"+folder+'query_results.hdf5'

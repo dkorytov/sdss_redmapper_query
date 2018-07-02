@@ -22,7 +22,7 @@ query_galaxy_only = param.get_bool("query_galaxy_only")
 r200_factor       = param.get_float("r200_factor") 
 cosmology_name    = param.get_string("cosmology_name")
 
-cosmo = background.set_comsology(cosmology_name)
+cosmo = background.set_cosmology(cosmology_name)
 dtk.ensure_dir(query_data_folder)
 
 hdulist = pyfits.open("redmapper_dr8_public_v6.3_catalog.fits")
@@ -83,17 +83,25 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
         query_table = "Galaxy"
     else:
         query_table = "PhotoObj"
+    print "querying..."
     hfile = h5py.File(file_loc+"query_results.hdf5",mode='a')
     hgroup = hfile.require_group('test')
     for i in range(start,num):
         #try:
         start = time.time()
-
-        if("%s%d"%(name,i) in hfile.keys()):
+        print "%d/%d"%(i+1,num)
+        keys = hfile.keys()
+        if("%s%d"%(name,i) in keys and "%s_prop%d"%(name,i) in keys):
             continue;
+
+        if "%s%d"%(name,i) in keys:
+            del hfile["%s%d"%(name,i)]
+
+        if "%s_prop%d"%(name,i) in keys:
+            del hfile["%s_prop%d"%(name,i)]
+ 
         #query columns are defined here:
         #http://skyserver.sdss.org/dr8/en/help/browser/browser.asp?n=PhotoObjAll&t=U
-        print "%d/%d"%(i+1,num),
            
         ra = cat_ra[i]
         dec = cat_dec[i]
@@ -165,15 +173,15 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
     hfile.close();
 
 
-print "Querying redmapper clusters..."
-if(cluster_size_max):
-    cluster_size = red_ra.size
-query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
+# print "Querying redmapper clusters..."
+# if(cluster_size_max):
+#     cluster_size = red_ra.size
+# query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
 
 
 print "Querying random fields..."
 if(random_size_max):
     random_size = rnd_ra.size
-query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=random_start,plot=False)
-
+query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=30000,plot=False)
+#random_start
 

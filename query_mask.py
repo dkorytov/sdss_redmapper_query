@@ -199,10 +199,10 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
     if(save_data):
         hfile.close()
 
-print "Querying redmapper clusters..."
-if(cluster_size_max):
-    cluster_size = red_ra.size
-query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False,save_data=True)
+# print "Querying redmapper clusters..."
+# if(cluster_size_max):
+#     cluster_size = red_ra.size
+# query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False,save_data=True)
 
 print "Querying random fields..."
 if(random_size_max):
