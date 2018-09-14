@@ -1,0 +1,97 @@
+
+######## Query Params ##############
+
+# where all the data files are stored
+# such as query results, background estimates, etc
+
+#query_data_folder data/normal_mask/query_results/
+query_data_folder data/normal_wmap7/query_results/
+
+# ingore below value and try to load as many possible 
+query_cluster_all true
+# how many clusters to load
+query_cluster_num 1000
+# gal = redmapper clusters, rnd = redmapper random fields 
+query_type gal
+
+
+###### Cosmology #############
+cosmology_name wmap7
+
+###### save radial profile file ########
+result_folder data/rad_profile_mstar1_wmap7_0.05avoid/result/
+
+
+######## Processing Param #############
+
+
+
+# what type of galaxies 
+# 1 = all galaxies
+# 2 = red squence galaxies
+# 3 = non-red squence galaxies 
+galaxy_type 1
+
+
+#What mag cut relative to Mstar?
+mstar_cut_offset 0
+
+# what is galaxy color
+# 1 = g-r
+# 2 = g-r - Rs(z) #normalized to red squence
+galaxy_color_type 1
+galaxy_color_lim1 -1 3 41 
+galaxy_color_lim2 -2 2 41 
+
+
+# magtidue in what band?
+# 1 = i-band
+# 2 = i-band -M*(z) # normalized to M*
+galaxy_mag_type 1
+galaxy_mag_lim1  12 22 101
+galaxy_mag_lim2 -6 4 101
+
+# weight of galaxies
+# 1 = radial profile by counts
+# 2 = radial profile by luminosity 
+galaxy_weight 1
+background_folder data/rad_profile_mstar0_wmap7/background/
+background_force  false
+background_all true
+background_num 10000	       
+
+# redshift bins for the background calculation
+background_z_start 0.05
+background_z_end 0.7
+background_z_num 30
+
+
+######## Plotting external data ########
+
+spt_plot true
+spt_file data/spt.txt
+
+######## Graphs Param ##################
+
+# bins for the final cluster binning
+
+z_bins       2
+z_bins_start 0.15
+z_bins_end   0.35
+
+
+# note: mass is 10^x
+mass_bins        9
+mass_bins_start  14.0
+mass_bins_end    16.0
+
+# radial bin options
+radial_r200_rescale true
+radial_bin_num 17
+radial_bin_kpc_min 0
+radial_bin_kpc_max 3000
+radial_bin_r200_min .05
+radial_bin_r200_max 1.0
+
+RS_line_plot true
+
