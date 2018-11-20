@@ -26,16 +26,82 @@ def set_cosmology(name):
         print "Cosmology not defined"
         raise()
     return cosmo
-def lambda_to_m200(l):
+
+def lambda_to_m200(l, z):
     #mass richness relation from http://arxiv.org/abs/1603.06953 
     #m200 is relative to the mean density not crit
     #    m200 = 10**14.344*(l/40.0)**1.33
 
     #mass richness relation from http://iopscience.iop.org/article/10.1088/0004-637X/746/2/178/pdf
-    # Hu & Kravtsov 2003 
+    # Rykoff et al, 2012 rescaleed to m200c
     # m200 relative to crit
     m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
     return m200
+
+
+def lambda_to_m200c( l, z, richness_mass_author="Rykoff"):
+    if richness_mass_author == "Rykoff":
+        return lambda_to_m200c_Rykoff(l, z)
+    elif richness_mass_author == "Simet":
+        return lambda_to_m200c_Simet(l, z)
+    elif richness_mass_author == "Simet":
+        return  lambda_to_m200c_Simet(l, z)
+    else:
+        print paper_author, "isn't a on the list of defined richness-mass relations"
+        raise KeyError
+
+def lambda_to_m200m_Simet(l, z):
+    # Simet et al, 2016 (2017 arxiv)
+    # mass richness relation from http://arxiv.org/abs/1603.06953 
+    # m200 is relative to the mean density not crit
+    m200 = 10**14.344*(l/40.0)**1.33
+    return m200
+
+def lambda_to_m200m_Baxter(l, z):
+    # Baxter et al
+    # Consteraining the mass-Richness Relationship of redMaPPer Clusters with Angular Clustering
+    # Eq 15
+    # Table 
+    # https://arxiv.org/pdf/1604.00048.pdf
+    ln_A = 33.66
+    alpha = 1.18
+    lambda_0 = 35
+    beta = 1.86
+    z_0 = 0.25
+    sigma_lnM = 0.3
+    #page 16
+    ln_A = 33.15
+    alpha = 1.0
+    lambda_0 = 35
+    beta = 1.0
+    z_0 = 0.25
+    sigma_lnM = 0.25
+
+    ln_m200 = ln_A + alpha*np.log(l/lambda_0) + beta*np.log((1+z)/(1+z_0))-0.5*sigma_lnM**2
+    return np.exp(ln_m200)
+
+def lambda_to_m200c_Rykoff(l, z):
+    # Rykoff et al, 2012 (2018 arxiv)
+    #https://arxiv.org/pdf/1104.2089.pdf
+    m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
+    return m200
+
+def lambda_to_m200m_Rykoff(l, z):
+    # Rykoff et al, 2012
+    #https://arxiv.org/pdf/1104.2089.pdf
+    m200 = 1e14*np.exp(1.72+1.08*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
+    return m200
+
+def m200m_to_m200c(m200m):
+    #TODO More Accurate translation
+    return 0.8*m200m
+
+def lambda_to_m200c_Baxter(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z))
+
+def lambda_to_m200c_Simet(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Simet(l, z))
+
 def crit_density(z): #Msun/h /kpc^3
     gcm3_to_msunkpc3 = 1.477543e31
     density = cosmo.critical_density(z).value*gcm3_to_msunkpc3

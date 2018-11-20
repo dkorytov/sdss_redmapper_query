@@ -25,6 +25,13 @@ random_start      = param.get_int("random_start")
 query_galaxy_only = param.get_bool("query_galaxy_only")
 r200_factor       = param.get_float("r200_factor") 
 
+if "richness_mass_author" in param:
+    richness_mass_author = param.get_string("richness_mass_author")
+else:
+    richness_mass_author = "Rykoff"
+print "Richness mass author: ", richness_mass_author
+
+
 dtk.ensure_dir(query_data_folder)
 
 hdulist = pyfits.open("redmapper_dr8_public_v6.3_catalog.fits")
@@ -119,10 +126,11 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        rad = lambda_to_arcmin(richness,z)
-        mass = lambda_to_m200(richness)
-        r200 = m200_to_r200(lambda_to_m200(richness),z)
+        #rad = lambda_to_arcmin(richness,z)
+        mass = lambda_to_m200c(richness, z, richness_mass_author=richness_mass_author)
+        r200 = m200_to_r200(mass, z)
         r200_deg = r200_to_arcmin(r200,z)/60.0
+        rad = r200_to_arcmin(r200, z)
         print "ra",ra,"dec",dec
         print "z",z,"l",richness,"mass",mass,"r200",r200,"r200 deg",r200_deg
         ## Query and save objects around target
@@ -199,13 +207,13 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
     if(save_data):
         hfile.close()
 
-# print "Querying redmapper clusters..."
-# if(cluster_size_max):
-#     cluster_size = red_ra.size
-# query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False,save_data=True)
+print "Querying redmapper clusters..."
+if(cluster_size_max):
+    cluster_size = red_ra.size
+query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False,save_data=True)
 
-print "Querying random fields..."
-if(random_size_max):
-    random_size = rnd_ra.size
-query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=random_start,plot=False)
+# print "Querying random fields..."
+# if(random_size_max):
+#     random_size = rnd_ra.size
+# query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=random_start,plot=False)
 

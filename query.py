@@ -22,6 +22,11 @@ query_galaxy_only = param.get_bool("query_galaxy_only")
 r200_factor       = param.get_float("r200_factor") 
 cosmology_name    = param.get_string("cosmology_name")
 
+if "richness_mass_author" in param:
+    richness_mass_author = param.get_string("richness_mass_author")
+else:
+    richness_mass_author = "Rykoff"
+
 cosmo = background.set_cosmology(cosmology_name)
 dtk.ensure_dir(query_data_folder)
 
@@ -46,14 +51,15 @@ rnd_dec= rdata.field('dec')
 rnd_z =  rdata.field('z')
 rnd_lambda=rdata.field('lambda')
 
+# Use the background.py specified  mass-richness definition
+# def lambda_to_m200(l):
+#     #mass richness relation from http://arxiv.org/abs/1603.06953
+#     #m200 is relative to the mean density
+# #    m200 = 10**14.344*(l/40.0)**1.33
+#     # Hu & Kravtsov 2003
+#     m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
+#     return m200
 
-def lambda_to_m200(l):
-    #mass richness relation from http://arxiv.org/abs/1603.06953
-    #m200 is relative to the mean density
-#    m200 = 10**14.344*(l/40.0)**1.33
-    # Hu & Kravtsov 2003
-    m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
-    return m200
 def crit_density(z): #Msun/h /kpc^3
     gcm3_to_msunkpc3 = 1.477543e31
     density = cosmo.critical_density(z).value*gcm3_to_msunkpc3
@@ -69,8 +75,9 @@ def r200_to_m200(r200,z):
 def r200_to_arcmin(r200,z):
     arcmin = r200/cosmo.kpc_proper_per_arcmin(z).value
     return arcmin
-def lambda_to_arcmin(l,z):
-    return r200_to_arcmin(m200_to_r200(lambda_to_m200(l),z),z)
+
+def lambda_to_arcmin(l,z, richness_mass_author = "Rykoff"):
+    return r200_to_arcmin(m200_to_r200(background.lambda_to_m200c(l, z, richness_mass_author=richness_mass_author),z),z)
 
 #print "\n\ntest:-----------: ", m200_to_r200(1e14,0)
 
@@ -107,9 +114,9 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        rad = lambda_to_arcmin(richness,z)
-        mass = lambda_to_m200(richness)
-        r200 = m200_to_r200(lambda_to_m200(richness),z)#                                                         1                               2                               3                               4                               5
+        rad = lambda_to_arcmin(richness,z, richness_mass_author=richness_mass_author)
+        mass = background.lambda_to_m200c(richness,z, richness_mass_author=richness_mass_author)
+        r200 = m200_to_r200(mass, z)
         ## save target properties 
         #cat = np.array([(ra,cat_dec[i],cat_z[i],mass,rad,r200)],
         #dtype=[('ra','f8'),('dec','f8'),('z','f8'),('mass','f4'),('rad_arcmin','f4'),('r200','f4')])
@@ -173,15 +180,15 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
     hfile.close();
 
 
-# print "Querying redmapper clusters..."
-# if(cluster_size_max):
-#     cluster_size = red_ra.size
-# query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
+print "Querying redmapper clusters..."
+if(cluster_size_max):
+    cluster_size = red_ra.size
+query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
 
 
-print "Querying random fields..."
-if(random_size_max):
-    random_size = rnd_ra.size
-query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=30000,plot=False)
+# print "Querying random fields..."
+# if(random_size_max):
+#     random_size = rnd_ra.size
+# query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=30000,plot=False)
 #random_start
 
