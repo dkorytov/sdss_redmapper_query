@@ -39,13 +39,19 @@ def lambda_to_m200(l, z):
     return m200
 
 
-def lambda_to_m200c( l, z, richness_mass_author="Rykoff"):
-    if richness_mass_author == "Rykoff":
+def lambda_to_m200c( l, z, richness_mass_author="Rykoff_crit"):
+    if richness_mass_author == "Rykoff_crit":
         return lambda_to_m200c_Rykoff(l, z)
-    elif richness_mass_author == "Simet":
+    elif richness_mass_author == "Simet_crit":
         return lambda_to_m200c_Simet(l, z)
-    elif richness_mass_author == "Simet":
+    elif richness_mass_author == "Baxter_crit":
         return  lambda_to_m200c_Simet(l, z)
+    elif richness_mass_author == "Rykoff_mean":
+        return  lambda_to_m200m_Rykoff(l, z)
+    elif richness_mass_author == "Simet_mean":
+        return  lambda_to_m200m_Simet(l, z)
+    elif richness_mass_author == "Baxter_mean":
+        return  lambda_to_m200m_Baxter(l, z)
     else:
         print paper_author, "isn't a on the list of defined richness-mass relations"
         raise KeyError
@@ -375,6 +381,8 @@ def set_mstar_cut(mstar_cut):
 def mstar(z):
     # defined in Rykoff 2011 http://arxiv.org/abs/1104.2089 eq. 11 
     # only good for 0.05 < z < 0.35
+    # Mi_* = -21.22, 2.25 x 10^10 Ldot
+    # Little h?
     return 12.27+62.36*z-289.79*z**2+729.69*z**3-709.42*z**4
 
 def m_cut(z):

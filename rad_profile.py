@@ -127,8 +127,10 @@ def rad_dist(ra1,dec1,ra2,dec2):
 
 def deg2rad(deg):
     return (deg/360.0)*(2.0*np.pi)
+
 def rad2deg(rad):
     return (rad/(2.0*np.pi))*360.0
+
 def rad_dist2(ra1,dec1,ra2,dec2):
     ra1=deg2rad(ra1)
     ra2=deg2rad(ra2)
