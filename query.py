@@ -26,6 +26,11 @@ if "richness_mass_author" in param:
     richness_mass_author = param.get_string("richness_mass_author")
 else:
     richness_mass_author = "Rykoff"
+if "mass_type" in param:
+    mass_type = param.get_string("mass_type")
+    assert (mass_type in ['critical', 'crit', 'mean']), "Mass type ("+mass_type+") not understood"
+else:
+    mass_type = "critical"
 
 cosmo = background.set_cosmology(cosmology_name)
 dtk.ensure_dir(query_data_folder)
@@ -84,7 +89,7 @@ def lambda_to_arcmin(l,z, richness_mass_author = "Rykoff"):
 print rnd_lambda.shape
 print np.unique(rnd_lambda).shape
 
-def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
+def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot=False):
     fails = []
     if(query_galaxy_only):
         query_table = "Galaxy"
@@ -114,8 +119,8 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        rad = lambda_to_arcmin(richness,z, richness_mass_author=richness_mass_author)
-        mass = background.lambda_to_m200c(richness,z, richness_mass_author=richness_mass_author)
+        # rad = lambda_to_arcmin(richness,z, richness_mass_author=richness_mass_author)
+        mass = background.lambda_to_m200(richness,z, richness_mass_author=richness_mass_author)
         r200 = m200_to_r200(mass, z)
         ## save target properties 
         #cat = np.array([(ra,cat_dec[i],cat_z[i],mass,rad,r200)],
@@ -129,14 +134,14 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False):
         hgroup.create_dataset("mass",data=mass)
         hgroup.create_dataset("rad",data=rad)
         hgroup.create_dataset("r200",data=r200)
-        
+        hgroup.create_dataset("richness", data = richness)
         ## Query and save objects around target
         result = sqlcl.query("select  p.ra, p.dec, p.type,p.insidemask,p.flags_g,p.flags_i,p.flags_r,p.cModelMag_u, p.cModelMagErr_u,p.cModelMag_g, p.cModelMagErr_g,p.cModelMag_r, p.cModelMagErr_r,p.cModelMag_i, p.cModelMagErr_i,p.cModelMag_z, p.cModelMagErr_z from "+query_table+" p join dbo.fGetNearbyObjEq(%f,%f,%f) r on p.ObjID = r.ObjID"%(ra,dec,r200_factor*rad)).read()
-        result = result.replace(',',', ')
-        output = open("test.txt","w")
-        output.write(result)
-        output.close()
-#        datagal = np.genfromtxt(StringIO(result),names=True,delimiter=', ',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
+        # result = result.replace(',',', ')
+        # output = open("test.txt","w")
+        # output.write(result)
+        # output.close()
+        # datagal = np.genfromtxt(StringIO(result),names=True,delimiter=', ',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
         datagal = np.genfromtxt(StringIO(result),names=True,skip_header=1,delimiter=', ',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
         #np.save(file_loc+"%s%d.npy"%(name,i),datagal)
 

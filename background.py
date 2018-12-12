@@ -27,19 +27,20 @@ def set_cosmology(name):
         raise()
     return cosmo
 
-def lambda_to_m200(l, z):
-    #mass richness relation from http://arxiv.org/abs/1603.06953 
-    #m200 is relative to the mean density not crit
-    #    m200 = 10**14.344*(l/40.0)**1.33
+# The function below is deprecated. 
+# def lambda_to_m200(l, z):
+#     #mass richness relation from http://arxiv.org/abs/1603.06953 
+#     #m200 is relative to the mean density not crit
+#     #    m200 = 10**14.344*(l/40.0)**1.33
 
-    #mass richness relation from http://iopscience.iop.org/article/10.1088/0004-637X/746/2/178/pdf
-    # Rykoff et al, 2012 rescaleed to m200c
-    # m200 relative to crit
-    m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
-    return m200
+#     #mass richness relation from http://iopscience.iop.org/article/10.1088/0004-637X/746/2/178/pdf
+#     # Rykoff et al, 2012 rescaleed to m200c
+#     # m200 relative to crit
+#     m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
+#     return m200
 
 
-def lambda_to_m200c( l, z, richness_mass_author="Rykoff_crit"):
+def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
     if richness_mass_author == "Rykoff_crit":
         return lambda_to_m200c_Rykoff(l, z)
     elif richness_mass_author == "Simet_crit":
@@ -60,6 +61,9 @@ def lambda_to_m200m_Simet(l, z):
     # Simet et al, 2016 (2017 arxiv)
     # mass richness relation from http://arxiv.org/abs/1603.06953 
     # m200 is relative to the mean density not crit
+    # m200m has h^-1 dependence, with h=1.0
+    # eq 28
+    # scatter, alpha = 0.25, log normal
     m200 = 10**14.344*(l/40.0)**1.33
     return m200
 
@@ -115,20 +119,34 @@ def crit_density(z): #Msun/h /kpc^3
     #print "crit desity(%f): %e Msun/kpc^3"%(z,density*1000**3/cosmo.h**2)
     return density
     
-def m200_to_r200(m200,z): #r200 in kpc
+def mean_density(z):
+    rho_crit = crit_density(z)
+    return rho_crit * cosmo.Om(z)
+
+def m200c_to_r200c(m200,z): #r200 in kpc
     r200 = (3.0*m200/(4.0*200.0*np.pi*crit_density(z)))**(1.0/3.0)
     return r200
 
-def r200_to_m200(r200,z):
+def r200c_to_m200c(r200,z): #r200 in kpc
     m200 = 4.0/3.0*np.pi*crit_denisty(z)*200*r200**3
     return m200
 
-def r200_to_arcmin(r200,z):
+def m200m_to_r200m(m200,z): #r200 in kpc
+    r200 = (3.0*m200/(4.0*200.0*np.pi*mean_density(z)))**(1.0/3.0)
+    return r200
+
+def r200m_to_m200m(r200,z): #r200 in kpc
+    m200 = 4.0/3.0*np.pi*mean_denisty(z)*200*r200**3
+    return m200
+
+def r200_to_arcmin(r200,z): #r200 in kpc
     arcmin = r200/cosmo.kpc_proper_per_arcmin(z).value
     return arcmin
 
-def lambda_to_arcmin(l,z):
-    return r200_to_arcmin(m200_to_r200(lambda_to_m200(l),z),z)
+# Deprecated. We need to specify the richness-mass relation
+# including which mass we are using
+# def lambda_to_arcmin(l,z): 
+#     return r200_to_arcmin(m200_to_r200(lambda_to_m200(l),z),z)
 
 
 def get_clstr(name,folder,num,start=0,till_end=False):

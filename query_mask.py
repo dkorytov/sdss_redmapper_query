@@ -126,8 +126,7 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        #rad = lambda_to_arcmin(richness,z)
-        mass = lambda_to_m200c(richness, z, richness_mass_author=richness_mass_author)
+        mass = lambda_to_m200(richness, z, richness_mass_author=richness_mass_author)
         r200 = m200_to_r200(mass, z)
         r200_deg = r200_to_arcmin(r200,z)/60.0
         rad = r200_to_arcmin(r200, z)
