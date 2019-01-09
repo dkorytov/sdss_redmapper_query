@@ -229,7 +229,7 @@ def get_clstr(name,folder,num,start=0,till_end=False):
             dataclstr['ra']   = gpgroup['ra'].value
             dataclstr['rad']  = gpgroup['rad'].value
             dataclstr['z']    = gpgroup['z'].value
-            # dataclstr['richness'] = gpgroup['richness'].value
+            dataclstr['richness'] = gpgroup['richness'].value
             mask_pass = hmask_results['%d'%j]['mask_pass'][:]
             #what does this do? Skip the thing if it has no galaxies?
             #will comment out

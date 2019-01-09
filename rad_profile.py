@@ -147,7 +147,7 @@ def rad_dist2(ra1,dec1,ra2,dec2):
 
 print "Loading clusters..."
 print query_cluster_num
-[dataclstr,datagal,data_pass_mask,clstr_num] = get_clstr(query_type,query_results,query_cluster_num,till_end=query_cluster_all)
+[dataclstr,datagal,data_pass_mask,clstr_num] = get_clstr(query_type, query_results, query_cluster_num, till_end=query_cluster_all)
 #[dataclstr,datagal,clstr_num] = get_clstr("gal",query_results,10)
 print clstr_num
 print "done."
@@ -157,36 +157,54 @@ print "done."
 
 # Checking the radial profile of the galaxies     
 if(True):
-    bins = np.linspace(0,3000,20)
+    bins = np.linspace(0,3500,20)
     [h,xbins]=np.histogram([],bins)
     [h2,xbins]=np.histogram([],bins)
     bin_avg = (xbins[1:]+xbins[0:-1])/2.0
     bin_area = np.pi*(xbins[1:]**2-xbins[0:-1]**2)
     print(xbins)
-    for i in range(0,clstr_num):
+    plot_count = 0
+    for j in range(0,clstr_num):
+        i = clstr_num -j-1
         slct = select_gal_old(dataclstr[i]['z'],datagal[i]['m_i'],datagal[i]['m_i_err'],datagal[i]['clr_g-r'],datagal[i]['clr_g-r_err'])
         [hh,_]=np.histogram(datagal[i]['rad_kpc'][slct],bins)
         hh=hh/bin_area
         h2=h2+hh #no background sub
         hhh=hh-bkgnd_sqkpc(dataclstr[i]['z'])
         h=h+hhh #with background sub
-        if(False):
+        if(True):
+            if(dataclstr[i]['z']>0.35 or data_pass_mask[i][0] == 0):
+                continue
             est_bkgnd = bkgnd_sqkpc(dataclstr[i]['z'])
-            plt.plot()
-            plt.plot(bin_avg,hh,'-x',label='raw')
-            plt.plot(bin_avg,hhh,'-x',label='bkgnd sub')
-            plt.axvline(dataclstr[i]['r200_kpc'],c='k',label='r200')
-            plt.plot(bin_avg,np.ones_like(bin_avg)*est_bkgnd,label='background')
+            fig, [ax1, ax2] = plt.subplots(1,2, figsize=(15,7))
+            ax2.plot(bin_avg,hh,'-x',label='raw', linewidth=2)
+            ax2.plot(bin_avg,hhh,'-x',label='bkgnd sub', alpha=0.1)
+            ax2.axvline(dataclstr[i]['r200_kpc'],c='k',label='r200')
+            ax2.axhline(0,c='k', linewidth=2)
+            ax2.plot(bin_avg,np.ones_like(bin_avg)*est_bkgnd,label='background')
             #plt.yscale('log')
-            plt.title('background level: %f'%est_bkgnd)
-            plt.legend()
-            plt.grid()
+            ax2.legend()
+            ax2.grid()
 
-            rrad = datagal[i]['rad_kpc']/dataclstr[i]['r200_kpc']
-            yy = np.random.rand(rrad.size)
-            plt.figure()
-            plt.plot(rrad, yy, 'x')
-            plt.show()
+            ax1.plot(datagal[i]['ra'], datagal[i]['dec'], '.', alpha=0.2, label='all gals')
+            ax1.plot(datagal[i]['ra'][slct], datagal[i]['dec'][slct], '.r', label='bright gals', markersize=8)
+            ax1.legend(loc='best')
+            ax1.set_xlabel('ra')
+            ax2.set_ylabel('dec')
+            # rrad = datagal[i]['rad_kpc']/dataclstr[i]['r200_kpc']
+            # yy = np.random.rand(rrad.size)
+            # plt.figure()
+            # plt.plot(rrad, yy, 'x')
+            string = "m:{:.1e}\nz:{:.2f}\nrichness:{:.0f}".format(
+                dataclstr[i]['m200'], 
+                dataclstr[i]['z'],0)
+                # dataclstr[i]['richness'])
+            ax1.text(0.05, 0.95, string, transform=ax1.transAxes, verticalalignment='top')
+            fig.tight_layout()
+            plot_count +=1
+            if(plot_count >15):
+                plot_count = 0
+                plt.show()
 
 #################################
 ## Radial profiles by z & mass ##
