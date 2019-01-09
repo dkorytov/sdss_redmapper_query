@@ -195,10 +195,14 @@ if(True):
             # yy = np.random.rand(rrad.size)
             # plt.figure()
             # plt.plot(rrad, yy, 'x')
+            if 'richness' in dataclstr[i]:
+                _richness = dataclstr[i]['richness']
+            else:
+                _richness = 0
             string = "m:{:.1e}\nz:{:.2f}\nrichness:{:.0f}".format(
                 dataclstr[i]['m200'], 
-                dataclstr[i]['z'],0)
-                # dataclstr[i]['richness'])
+                dataclstr[i]['z'],
+                _richness)
             ax1.text(0.05, 0.95, string, transform=ax1.transAxes, verticalalignment='top')
             fig.tight_layout()
             plot_count +=1
