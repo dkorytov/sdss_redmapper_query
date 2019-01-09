@@ -32,6 +32,11 @@ if "mass_type" in param:
 else:
     mass_type = "critical"
 
+if "cluster_use_random_positions" in param:
+    cluster_use_random_positions = param.get_bool("cluster_use_random_positions")
+else:
+    cluster_use_random_positions = False
+
 cosmo = background.set_cosmology(cosmology_name)
 dtk.ensure_dir(query_data_folder)
 
@@ -190,6 +195,9 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
 print "Querying redmapper clusters..."
 if(cluster_size_max):
     cluster_size = red_ra.size
+if(cluster_use_random_positions ):
+    red_ra[:]  = rnd_ra[:cluster_size]
+    red_dec[:] = rnd_dec[:cluster_size]
 query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
 
 
