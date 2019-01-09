@@ -56,8 +56,6 @@ rnd_z =  rdata.field('z')
 rnd_lambda=rdata.field('lambda')
 
 
-print "\n\ntest:-----------: ", m200_to_r200(1e14,0)
-
 num_pass = 0
 num_fail = 0
 
@@ -76,6 +74,7 @@ def area_str_to_lines(s):
     x.append(np.float(data[2]))
     y.append(np.float(data[3]))
     return x,y
+
 def area_to_lenghts(ra1,dec1,ra2,dec2):
     ra_diff = np.abs(ra1-ra2)
     ra_avg = (ra1+ra2)/2.0
@@ -126,8 +125,8 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        mass = lambda_to_m200(richness, z, richness_mass_author=richness_mass_author)
-        r200 = m200_to_r200(mass, z)
+        mass, r200 = lambda_to_m200_r200(richness, z, richness_mass_author=richness_mass_author)
+
         r200_deg = r200_to_arcmin(r200,z)/60.0
         rad = r200_to_arcmin(r200, z)
         print "ra",ra,"dec",dec
