@@ -39,7 +39,19 @@ def set_cosmology(name):
 #     m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
 #     return m200
 
-
+def lambda_to_m200_r200(l, z, richness_mass_author="Rykoff_crit"):
+    m200 = lambda_to_m200(l, z, richness_mass_author)
+    mass_type = richness_mass_author.split("_")[-1]
+    if mass_type == "crit":
+        r200 = m200c_to_r200c(m200, z)
+    elif mass_type == "mean":
+        r200 = m200m_to_r200m(m200, z)
+    else:
+        print "how the hell did you get through \"lambda_to_m200\" with "+mass_type
+        print "Well, that's not allowed....so let's crash..."
+        raise KeyError("read the printed message...")
+    return m200, r200
+ 
 def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
     if richness_mass_author == "Rykoff_crit":
         return lambda_to_m200c_Rykoff(l, z)
@@ -54,7 +66,7 @@ def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
     elif richness_mass_author == "Baxter_mean":
         return  lambda_to_m200m_Baxter(l, z)
     else:
-        print paper_author, "isn't a on the list of defined richness-mass relations"
+        print richness_mass_author, "isn't a on the list of defined richness-mass relations"
         raise KeyError
 
 def lambda_to_m200m_Simet(l, z):
@@ -152,7 +164,7 @@ def r200_to_arcmin(r200,z): #r200 in kpc
 def get_clstr(name,folder,num,start=0,till_end=False):
     # till_end = true will make the loop continue until 
     # it fails the find a file. 
-    print "\tloading query data..."
+    print "\tloading query data... from ", folder, name
     print "\t\tstart: ",start
     if(till_end):
         print "\t\ttill_end: ",till_end
@@ -217,7 +229,7 @@ def get_clstr(name,folder,num,start=0,till_end=False):
             dataclstr['ra']   = gpgroup['ra'].value
             dataclstr['rad']  = gpgroup['rad'].value
             dataclstr['z']    = gpgroup['z'].value
-            
+            # dataclstr['richness'] = gpgroup['richness'].value
             mask_pass = hmask_results['%d'%j]['mask_pass'][:]
             #what does this do? Skip the thing if it has no galaxies?
             #will comment out
