@@ -204,23 +204,23 @@ def get_clstr(name,folder,num,start=0,till_end=False):
             datagal = {}
             dataclstr = {}
             galgroup = hquery_results[name+'%d'%j] #individual galaxy properties
-            datagal['dec']       = galgroup['dec'][:]
-            datagal['flags_g']   = galgroup['flags_g'][:]   
-            datagal['flags_i']   = galgroup['flags_i'][:]   
-            datagal['flags_r']   = galgroup['flags_r'][:]   
-            datagal['insidemask']= galgroup['insidemask'][:]
-            datagal['m_g_err']   = galgroup['mag_err_g'][:] 
-            datagal['m_i_err']   = galgroup['mag_err_i'][:] 
-            datagal['m_r_err']   = galgroup['mag_err_r'][:] 
-            datagal['m_u_err']   = galgroup['mag_err_u'][:] 
-            datagal['m_z_err']   = galgroup['mag_err_z'][:] 
-            datagal['m_g']       = galgroup['mag_g'][:]     
-            datagal['m_i']       = galgroup['mag_i'][:]     
-            datagal['m_r']       = galgroup['mag_r'][:]     
-            datagal['m_u']       = galgroup['mag_u'][:]  
-            datagal['m_z']       = galgroup['mag_z'][:]     
-            datagal['ra']        = galgroup['ra'][:]        
-            datagal['type']      = galgroup['type'][:]      
+            datagal['dec']       = galgroup['dec'].value
+            datagal['flags_g']   = galgroup['flags_g'].value   
+            datagal['flags_i']   = galgroup['flags_i'].value   
+            datagal['flags_r']   = galgroup['flags_r'].value   
+            datagal['insidemask']= galgroup['insidemask'].value
+            datagal['m_g_err']   = galgroup['mag_err_g'].value 
+            datagal['m_i_err']   = galgroup['mag_err_i'].value 
+            datagal['m_r_err']   = galgroup['mag_err_r'].value 
+            datagal['m_u_err']   = galgroup['mag_err_u'].value 
+            datagal['m_z_err']   = galgroup['mag_err_z'].value 
+            datagal['m_g']       = galgroup['mag_g'].value     
+            datagal['m_i']       = galgroup['mag_i'].value     
+            datagal['m_r']       = galgroup['mag_r'].value     
+            datagal['m_u']       = galgroup['mag_u'].value  
+            datagal['m_z']       = galgroup['mag_z'].value     
+            datagal['ra']        = galgroup['ra'].value        
+            datagal['type']      = galgroup['type'].value      
 
             gpgroup = hquery_results[name+'_prop%d'%j] #cluster properties 
             dataclstr['dec']  = gpgroup['dec'].value
@@ -229,7 +229,8 @@ def get_clstr(name,folder,num,start=0,till_end=False):
             dataclstr['ra']   = gpgroup['ra'].value
             dataclstr['rad']  = gpgroup['rad'].value
             dataclstr['z']    = gpgroup['z'].value
-            dataclstr['richness'] = gpgroup['richness'].value
+            if 'richness' in gpgroup:
+                dataclstr['richness'] = gpgroup['richness'].value
             mask_pass = hmask_results['%d'%j]['mask_pass'][:]
             #what does this do? Skip the thing if it has no galaxies?
             #will comment out
