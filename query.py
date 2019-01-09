@@ -25,7 +25,7 @@ cosmology_name    = param.get_string("cosmology_name")
 if "richness_mass_author" in param:
     richness_mass_author = param.get_string("richness_mass_author")
 else:
-    richness_mass_author = "Rykoff"
+    richness_mass_author = "Rykoff_crit"
 if "mass_type" in param:
     mass_type = param.get_string("mass_type")
     assert (mass_type in ['critical', 'crit', 'mean']), "Mass type ("+mass_type+") not understood"
@@ -65,24 +65,26 @@ rnd_lambda=rdata.field('lambda')
 #     m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
 #     return m200
 
-def crit_density(z): #Msun/h /kpc^3
-    gcm3_to_msunkpc3 = 1.477543e31
-    density = cosmo.critical_density(z).value*gcm3_to_msunkpc3
-    #print "crit desity(%f): %f Msun/kpc^3"%(z,density)
-    #print "crit desity(%f): %e Msun/kpc^3"%(z,density*1000**3/cosmo.h**2)
-    return density
+# def crit_density(z): #Msun/h /kpc^3
+#     gcm3_to_msunkpc3 = 1.477543e31
+#     density = cosmo.critical_density(z).value*gcm3_to_msunkpc3
+#     #print "crit desity(%f): %f Msun/kpc^3"%(z,density)
+#     #print "crit desity(%f): %e Msun/kpc^3"%(z,density*1000**3/cosmo.h**2)
+#     return density
     
-def m200_to_r200(m200,z): #r200 in kpc
-    r200 = (3.0*m200/(4.0*200.0*np.pi*crit_density(z)))**(1.0/3.0)
-    return r200
-def r200_to_m200(r200,z):
-    m200 = 4.0/3.0*np.pi*crit_denisty(z)*200*r200**3
-def r200_to_arcmin(r200,z):
-    arcmin = r200/cosmo.kpc_proper_per_arcmin(z).value
-    return arcmin
+# def m200_to_r200(m200,z): #r200 in kpc
+#     r200 = (3.0*m200/(4.0*200.0*np.pi*crit_density(z)))**(1.0/3.0)
+#     return r200
 
-def lambda_to_arcmin(l,z, richness_mass_author = "Rykoff"):
-    return r200_to_arcmin(m200_to_r200(background.lambda_to_m200c(l, z, richness_mass_author=richness_mass_author),z),z)
+# def r200_to_m200(r200,z):
+#     m200 = 4.0/3.0*np.pi*crit_denisty(z)*200*r200**3
+
+# def r200_to_arcmin(r200,z):
+#     arcmin = r200/cosmo.kpc_proper_per_arcmin(z).value
+#     return arcmin
+
+# def lambda_to_arcmin(l,z, richness_mass_author = "Rykoff"):
+#     return r200_to_arcmin(m200_to_r200(background.lambda_to_m200c(l, z, richness_mass_author=richness_mass_author),z),z)
 
 #print "\n\ntest:-----------: ", m200_to_r200(1e14,0)
 
@@ -97,7 +99,6 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         query_table = "PhotoObj"
     print "querying..."
     hfile = h5py.File(file_loc+"query_results.hdf5",mode='a')
-    hgroup = hfile.require_group('test')
     for i in range(start,num):
         #try:
         start = time.time()
@@ -120,8 +121,9 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         z   = cat_z[i]
         richness = cat_lambda[i]
         # rad = lambda_to_arcmin(richness,z, richness_mass_author=richness_mass_author)
-        mass = background.lambda_to_m200(richness,z, richness_mass_author=richness_mass_author)
-        r200 = m200_to_r200(mass, z)
+        
+        mass, r200 = background.lambda_to_m200_r200(richness,z, richness_mass_author=richness_mass_author)
+        rad = background.r200_to_arcmin(r200, z)
         ## save target properties 
         #cat = np.array([(ra,cat_dec[i],cat_z[i],mass,rad,r200)],
         #dtype=[('ra','f8'),('dec','f8'),('z','f8'),('mass','f4'),('rad_arcmin','f4'),('r200','f4')])
@@ -142,7 +144,7 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         # output.write(result)
         # output.close()
         # datagal = np.genfromtxt(StringIO(result),names=True,delimiter=', ',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
-        datagal = np.genfromtxt(StringIO(result),names=True,skip_header=1,delimiter=', ',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
+        datagal = np.genfromtxt(StringIO(result),names=True,skip_header=1,delimiter=',',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
         #np.save(file_loc+"%s%d.npy"%(name,i),datagal)
 
         hgroup = hfile.create_group("%s%d"%(name,i))
