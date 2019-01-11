@@ -31,6 +31,15 @@ else:
     richness_mass_author = "Rykoff"
 print "Richness mass author: ", richness_mass_author
 
+if "clusters_query" in param:
+    clusters_query = param.get_bool("clusters_query")
+else:
+    clusters_query = True
+
+if "randoms_query" in param:
+    randoms_query = param.get_bool("randoms_query")
+else:
+    randoms_query = True
 
 dtk.ensure_dir(query_data_folder)
 
@@ -107,7 +116,9 @@ def single_mask_outside_r200(ra,dec,r200,mask_area,mask_type,extra_space):
 
     return result
     
-def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,save_data=True):
+def query_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name,
+               num, r200_factor=1.0, start=0, plot=False,
+               save_data=True):
     global num_pass
     global num_fail
     fails = []
@@ -128,7 +139,7 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
         mass, r200 = lambda_to_m200_r200(richness, z, richness_mass_author=richness_mass_author)
 
         r200_deg = r200_to_arcmin(r200,z)/60.0
-        rad = r200_to_arcmin(r200, z)
+        rad = r200_to_arcmin(r200, z)*r200_factor
         print "ra",ra,"dec",dec
         print "z",z,"l",richness,"mass",mass,"r200",r200,"r200 deg",r200_deg
         ## Query and save objects around target
@@ -208,10 +219,14 @@ def query(file_loc,cat_ra,cat_dec,cat_z,cat_lambda,name,num,start=0,plot=False,s
 print "Querying redmapper clusters..."
 if(cluster_size_max):
     cluster_size = red_ra.size
-query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False,save_data=True)
+query_mask(query_data_folder, red_ra, red_dec, red_z, red_lambda,
+           "gal", cluster_size, r200_factor=r200_factor, start=cluster_start,
+           plot=False, save_data=True)
 
-# print "Querying random fields..."
-# if(random_size_max):
-#     random_size = rnd_ra.size
-# query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=random_start,plot=False)
+print "Querying random fields..."
+if(random_size_max):
+     random_size = rnd_ra.size
+query_mask(query_data_folder, rnd_ra, rnd_dec, rnd_z, rnd_lambda,
+           "rnd", random_size, r200_factor=r200_factor,
+           start=random_start, plot=False, save_data=True)
 

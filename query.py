@@ -37,6 +37,16 @@ if "cluster_use_random_positions" in param:
 else:
     cluster_use_random_positions = False
 
+if "query_random" in param:
+    query_random = param.get_bool("query_random")
+else:
+    query_random = True
+
+if "query_cluster" in param:
+    query_cluster = param.get_bool("query_cluster")
+else:
+    query_cluster = True
+
 cosmo = background.set_cosmology(cosmology_name)
 dtk.ensure_dir(query_data_folder)
 
@@ -191,19 +201,23 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         np.save(file_loc+"fail_indexs.npy",fails)
     hfile.close();
 
+if query_cluster:
+    print "Querying redmapper clusters..."
+    if(cluster_size_max):
+        cluster_size = red_ra.size
+    if(cluster_use_random_positions ):
+        red_ra[:cluster_size]  = rnd_ra[:cluster_size]
+        red_dec[:cluster_size] = rnd_dec[:cluster_size]
+    query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
+else:
+    print "Not querying redmapper clusters..."
 
-print "Querying redmapper clusters..."
-if(cluster_size_max):
-    cluster_size = red_ra.size
-if(cluster_use_random_positions ):
-    red_ra[:]  = rnd_ra[:cluster_size]
-    red_dec[:] = rnd_dec[:cluster_size]
-query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
+if query_random:
+    print "Querying random fields..."
+    if(random_size_max):
+        random_size = rnd_ra.size
+    query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=random_start,plot=False)
+else:
+    print "Not quering random fields..."
 
-
-# print "Querying random fields..."
-# if(random_size_max):
-#     random_size = rnd_ra.size
-# query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=30000,plot=False)
-#random_start
 
