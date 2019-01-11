@@ -64,6 +64,11 @@ if('mstar_cut_offset' in param.data.keys()):
     mstar_cut_offset = param.get_float('mstar_cut_offset')
 else:
     mstar_cut_offset = 1.0
+
+if 'background_r200_factor' in param:
+    background_r200_factor = param.get_float('background_r200_factor')
+else:
+    background_r200_factor = 1.0
 #######################
 ## Processing Params ##
 #######################
@@ -114,7 +119,7 @@ if(spt_plot):
 ## Get background estimates ##
 ##############################
 
-make_background_estimates(query_results,background_folder,galaxy_type,galaxy_weight,background_z_bins,force=background_force,use_all=background_all,use_num=background_num)
+make_background_estimates(query_results,background_folder,galaxy_type,galaxy_weight,background_z_bins,force=background_force,use_all=background_all,use_num=background_num, background_r200_factor=background_r200_factor)
 [bkgnd_sqkpc,H_bkgnd_sqkpc] = get_background_estimate_sqkpc(background_folder,galaxy_type,galaxy_weight)
 [bkgnd_sqdeg,H_bkgnd_sqdeg] = get_background_estimate_sqdeg(background_folder,galaxy_type,galaxy_weight)
 
@@ -156,7 +161,7 @@ print "done."
 
 
 # Checking the radial profile of the galaxies     
-if(True):
+if(False):
     bins = np.linspace(0,3500,20)
     [h,xbins]=np.histogram([],bins)
     [h2,xbins]=np.histogram([],bins)

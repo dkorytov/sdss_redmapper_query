@@ -203,7 +203,9 @@ def get_clstr(name,folder,num,start=0,till_end=False):
             #dataclstr = np.load(folder+"%s_prop%d.npy"%(name,i))
             datagal = {}
             dataclstr = {}
+            keys = hquery_results.keys()
             galgroup = hquery_results[name+'%d'%j] #individual galaxy properties
+
             datagal['dec']       = galgroup['dec'].value
             datagal['flags_g']   = galgroup['flags_g'].value   
             datagal['flags_i']   = galgroup['flags_i'].value   
@@ -530,7 +532,8 @@ def make_background_estimates(query_results,background_folder,
                               zbins,
                               force=False,
                               use_all=True,
-                              use_num=1000):
+                              use_num=1000,
+                              background_r200_factor=1.0):
     background_file = background_file_name(background_folder,galaxy_type,galaxy_weight)
     print background_file
     if(not os.path.isfile(background_file) or force):
@@ -561,14 +564,14 @@ def make_background_estimates(query_results,background_folder,
                 #d = datagal[j]['clr_g-r_err']
                 slct = select_gal_old(z,datagal[j]['m_i'],datagal[j]['m_i_err'],datagal[j]['clr_g-r'],datagal[j]['clr_g-r_err'])
                 weights = weigh_galaxies(dataclstr[j],datagal[j],galaxy_weight)
-                counts.append(np.sum(weights[slct])/dataclstr[j]['sq_deg'])
+                counts.append(np.sum(weights[slct])/(dataclstr[j]['sq_deg']*(background_r200_factor)**2))
                 #change the z-dep features of the galaxies (poor man's k-correction, etc)
                 set_datagal_z_dep(z,datagal[j])
                 [h,_,_]=histogram2d_wrapper(datagal[j]['mag'][slct], datagal[j]['clr'][slct],
                                             weights=weights[slct], bins=(m_i_bins,clr_gr_bins))
                 if(np.abs(1.0-np.sum(weights[slct])/np.sum(h)) > 1e-3):
                     print "cnt: %d, h: %d diff:%f"%(np.sum(weights[slct]),np.sum(h),np.abs(1.0-np.sum(weights[slct])/np.sum(h)))
-                H_background+=h/dataclstr[j]['sq_deg']/get_color_mag_bin_area()
+                H_background+=h/(dataclstr[j]['sq_deg']*(background_r200_factor)**2)/get_color_mag_bin_area()
                 #print "[%d] z:%f counts: %f counts/sqdeg: %f counts/sqkpc: %f"%(j,clstr_z[j],tmp,tmp2,tmp3)
             H_z_backgrounds[i,:,:]=H_background/float(used_number)
             backgrounds_counts[i] =np.average(counts)
