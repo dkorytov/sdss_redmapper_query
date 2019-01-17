@@ -161,7 +161,7 @@ def r200_to_arcmin(r200,z): #r200 in kpc
 #     return r200_to_arcmin(m200_to_r200(lambda_to_m200(l),z),z)
 
 
-def get_clstr(name,folder,num,start=0,till_end=False):
+def get_clstr(name,folder,num,start=0,till_end=False, richness_mass_author=None):
     # till_end = true will make the loop continue until 
     # it fails the find a file. 
     print "\tloading query data... from ", folder, name
@@ -233,6 +233,15 @@ def get_clstr(name,folder,num,start=0,till_end=False):
             dataclstr['z']    = gpgroup['z'].value
             if 'richness' in gpgroup:
                 dataclstr['richness'] = gpgroup['richness'].value
+                if richness_mass_author is not None:
+                    m200, r200 = lambda_to_m200_r200(dataclstr['richness'], 
+                                                     dataclstr['z'],
+                                                     richness_mass_author = richness_mass_author)
+                    # print "old r200_kpc: ", dataclstr['r200']
+                    # print "new r200_kpc: ", r200
+                    # print "\n\n"
+                    dataclstr['mass'] = m200
+                    dataclstr['r200'] = r200*0.7
             mask_pass = hmask_results['%d'%j]['mask_pass'][:]
             #what does this do? Skip the thing if it has no galaxies?
             #will comment out

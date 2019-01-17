@@ -69,6 +69,11 @@ if 'background_r200_factor' in param:
     background_r200_factor = param.get_float('background_r200_factor')
 else:
     background_r200_factor = 1.0
+
+if 'richness_mass_author' in param:
+    richness_mass_author = param.get_string("richness_mass_author")
+else:
+    richness_mass_author = None
 #######################
 ## Processing Params ##
 #######################
@@ -152,7 +157,11 @@ def rad_dist2(ra1,dec1,ra2,dec2):
 
 print "Loading clusters..."
 print query_cluster_num
-[dataclstr,datagal,data_pass_mask,clstr_num] = get_clstr(query_type, query_results, query_cluster_num, till_end=query_cluster_all)
+[dataclstr,datagal,data_pass_mask,clstr_num] = get_clstr(query_type,
+                                                         query_results,
+                                                         query_cluster_num,
+                                                         till_end = query_cluster_all,
+                                                         richness_mass_author = richness_mass_author)
 #[dataclstr,datagal,clstr_num] = get_clstr("gal",query_results,10)
 print clstr_num
 print "done."
