@@ -40,7 +40,7 @@ def set_cosmology(name):
 #     return m200
 
 def lambda_to_m200_r200(l, z, richness_mass_author="Rykoff_crit"):
-    m200 = lambda_to_m200(l, z, richness_mass_author)
+    m200 = lambda_to_m200(l, z, richness_mass_author=richness_mass_author)
     mass_type = richness_mass_author.split("_")[-1]
     if mass_type == "crit":
         r200 = m200c_to_r200c(m200, z)
@@ -58,7 +58,7 @@ def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
     elif richness_mass_author == "Simet_crit":
         return lambda_to_m200c_Simet(l, z)
     elif richness_mass_author == "Baxter_crit":
-        return  lambda_to_m200c_Simet(l, z)
+        return  lambda_to_m200c_Baxter(l, z)
     elif richness_mass_author == "Rykoff_mean":
         return  lambda_to_m200m_Rykoff(l, z)
     elif richness_mass_author == "Simet_mean":
@@ -67,7 +67,7 @@ def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
         return  lambda_to_m200m_Baxter(l, z)
     else:
         print richness_mass_author, "isn't a on the list of defined richness-mass relations"
-        raise KeyError
+        raise KeyError("\'{}\' isn't a on the list of defined richness-mass relations".format(richness_mass_author))
 
 def lambda_to_m200m_Simet(l, z):
     # Simet et al, 2016 (2017 arxiv)
