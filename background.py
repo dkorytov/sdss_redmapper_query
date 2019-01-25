@@ -10,6 +10,8 @@ import scipy.interpolate
 import dtk
 import os
 import h5py
+from colossus.halo import mass_adv
+from colossus.cosmology import cosmology
 
 cosmo=None
 def set_cosmology(name):
@@ -40,6 +42,27 @@ def set_cosmology(name):
 #     return m200
 
 def lambda_to_m200_r200(l, z, richness_mass_author="Rykoff_crit"):
+    """
+    paramters
+    ---------------------------------
+    l : array_like
+      - richness (lamda) of the cluster
+
+    z : array_like
+      - redshift of the cluster
+
+    richness_mass_author : string
+      - Which author to use to convert the richness to a m200(c/m) and r200(c/m).
+
+    returns
+    ---------------------------------
+    m200 : array_like
+      - The SO mass of the halo in Msun/h, h=1.0
+
+    r200 : array_like
+      - The SO raidus of the halo in proper kpc/h, h=1.0. I had to introduce
+        the scale factor to get proper kpc/h. 
+    """
     m200 = lambda_to_m200(l, z, richness_mass_author=richness_mass_author)
     mass_type = richness_mass_author.split("_")[-1]
     if mass_type == "crit":
@@ -47,10 +70,10 @@ def lambda_to_m200_r200(l, z, richness_mass_author="Rykoff_crit"):
     elif mass_type == "mean":
         r200 = m200m_to_r200m(m200, z)
     else:
-        print "how the hell did you get through \"lambda_to_m200\" with "+mass_type
-        print "Well, that's not allowed....so let's crash..."
-        raise KeyError("read the printed message...")
-    return m200, r200
+        print richness_mass_author, "isn't a on the list of defined richness-mass relations"
+        raise KeyError("\'{}\' isn't a on the list of defined richness-mass relations".format(richness_mass_author))
+    a = 1.0/(z+1.0)
+    return m200, r200*a
  
 def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
     if richness_mass_author == "Rykoff_crit":
@@ -114,15 +137,19 @@ def lambda_to_m200m_Rykoff(l, z):
     m200 = 1e14*np.exp(1.72+1.08*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
     return m200
 
-def m200m_to_m200c(m200m):
+def m200m_to_m200c(m200m, z):
     #TODO More Accurate translation
-    return 0.8*m200m
+    cosmology.setCosmology('WMAP7')
+    M200c_col, R200c_col, c200c_col = mass_adv.changeMassDefinitionCModel(m200m, z,
+                                                                          "200m","200c", c_model='child18')#cat['sod_cdelta']
+    
+    return M200c_col
 
 def lambda_to_m200c_Baxter(l, z):
-    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z))
+    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z), z)
 
 def lambda_to_m200c_Simet(l, z):
-    return m200m_to_m200c(lambda_to_m200m_Simet(l, z))
+    return m200m_to_m200c(lambda_to_m200m_Simet(l, z), z)
 
 def crit_density(z): #Msun/h /kpc^3
     gcm3_to_msunkpc3 = 1.477543e31
@@ -135,19 +162,19 @@ def mean_density(z):
     rho_crit = crit_density(z)
     return rho_crit * cosmo.Om(z)
 
-def m200c_to_r200c(m200,z): #r200 in kpc
+def m200c_to_r200c(m200,z): #r200 in comoving kpc (/h?)
     r200 = (3.0*m200/(4.0*200.0*np.pi*crit_density(z)))**(1.0/3.0)
     return r200
 
-def r200c_to_m200c(r200,z): #r200 in kpc
+def r200c_to_m200c(r200,z): #r200 in comoving kpc (/h?)
     m200 = 4.0/3.0*np.pi*crit_denisty(z)*200*r200**3
     return m200
 
-def m200m_to_r200m(m200,z): #r200 in kpc
+def m200m_to_r200m(m200,z): #r200 in comoving kpc (/h?)
     r200 = (3.0*m200/(4.0*200.0*np.pi*mean_density(z)))**(1.0/3.0)
     return r200
 
-def r200m_to_m200m(r200,z): #r200 in kpc
+def r200m_to_m200m(r200,z): #r200 in comoving kpc (/h?)
     m200 = 4.0/3.0*np.pi*mean_denisty(z)*200*r200**3
     return m200
 
@@ -231,6 +258,7 @@ def get_clstr(name,folder,num,start=0,till_end=False, richness_mass_author=None)
             dataclstr['ra']   = gpgroup['ra'].value
             dataclstr['rad']  = gpgroup['rad'].value
             dataclstr['z']    = gpgroup['z'].value
+            dataclstr['a']    = 1.0/(1.0+dataclstr['z'])
             if 'richness' in gpgroup:
                 dataclstr['richness'] = gpgroup['richness'].value
                 if richness_mass_author is not None:
@@ -241,7 +269,8 @@ def get_clstr(name,folder,num,start=0,till_end=False, richness_mass_author=None)
                     # print "new r200_kpc: ", r200
                     # print "\n\n"
                     dataclstr['mass'] = m200
-                    dataclstr['r200'] = r200*0.7
+                    dataclstr['r200'] = r200*0.7*dataclstr['a'] #convert to physical 
+                    # kpc radius
             mask_pass = hmask_results['%d'%j]['mask_pass'][:]
             #what does this do? Skip the thing if it has no galaxies?
             #will comment out
