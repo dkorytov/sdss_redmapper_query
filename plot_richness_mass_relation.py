@@ -91,8 +91,8 @@ def plot_richness_mass_relation():
     a = 1.0/(1.0+0.25)
     # plt.plot(m200m_simet, r200m_simet, '-b',  label='my simet mean')
     # plt.plot(m200c_simet, r200c_simet, '--b', label='my simet crit')
-    plt.plot(m200m_simet, r200m_simet*a, '-b',  label='my simet mean')
-    plt.plot(m200c_simet, r200c_simet*a, '--b', label='my simet crit')
+    plt.plot(m200m_simet, r200m_simet, '-b',  label='my simet mean')
+    plt.plot(m200c_simet, r200c_simet, '--b', label='my simet crit')
 
     nfw_200m = NFWProfile(mdef='200m', redshift=0.25)
     nfw_200c = NFWProfile(mdef='200c', redshift=0.25)
@@ -105,8 +105,8 @@ def plot_richness_mass_relation():
     plt.legend(loc='best', framealpha=0.3)
     plt.xscale('log')
     plt.yscale('log')
-    plt.xlabel('M200')
-    plt.ylabel('R200')
+    plt.xlabel('M200 [Msun]')
+    plt.ylabel('R200 [proper kpc]')
     plt.grid()
 
     plt.show()
