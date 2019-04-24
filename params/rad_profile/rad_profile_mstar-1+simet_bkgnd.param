@@ -58,7 +58,7 @@ galaxy_weight 1
 background_folder data/test/background/
 background_r200_factor 1.1 
 background_force  true
-background_all true
+background_all false
 background_num 10000	       
 
 # redshift bins for the background calculation
