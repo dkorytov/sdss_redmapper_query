@@ -167,7 +167,7 @@ def m200c_to_r200c(m200,z): #r200 in comoving kpc (/h?)
     return r200
 
 def r200c_to_m200c(r200,z): #r200 in comoving kpc (/h?)
-    m200 = 4.0/3.0*np.pi*crit_denisty(z)*200*r200**3
+    m200 = 4.0/3.0*np.pi*crit_density(z)*200*r200**3
     return m200
 
 def m200m_to_r200m(m200,z): #r200 in comoving kpc (/h?)
@@ -181,6 +181,9 @@ def r200m_to_m200m(r200,z): #r200 in comoving kpc (/h?)
 def r200_to_arcmin(r200,z): #r200 in kpc
     arcmin = r200/cosmo.kpc_proper_per_arcmin(z).value
     return arcmin
+def arcmin_to_r200(arcmin, z):
+    r200 = cosmo.kpc_proper_per_arcmin(z).value*arcmin
+    return r200
 
 # Deprecated. We need to specify the richness-mass relation
 # including which mass we are using
