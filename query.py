@@ -146,8 +146,18 @@ def load_spider_fits(fname):
     cat['z'] = data.field('z_lambda')
     cat['lambda'] = np.zeros_like(cat['z'])
     cat['r200c_deg']  = data.field('R200C_DEG')
+    cat = spider_nan_clean_up(cat)
     return cat
-    
+
+def spider_nan_clean_up(cat):
+    slct = np.ones_like(cat['ra'], dtype=bool)
+    for key in cat.keys():
+        slct = slct & np.isfinite(cat[key])
+    result = {}
+    for key in cat.keys():
+        result[key] = cat[key][slct]
+    return result
+
 def query(param_fname):
     param = dtk.Param(param_fname)
     query_data_folder = param.get_string("query_data_folder")
