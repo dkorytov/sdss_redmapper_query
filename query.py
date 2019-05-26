@@ -10,103 +10,12 @@ import background
 import time
 import h5py 
 
-param = dtk.Param(sys.argv[1])
-query_data_folder = param.get_string("query_data_folder")
-cluster_size_max  = param.get_bool("cluster_size_max")
-cluster_size      = param.get_int("cluster_size")
-cluster_start     = param.get_int("cluster_start")
-random_size_max   = param.get_bool("random_size_max")
-random_size       = param.get_int("random_size")
-random_start      = param.get_int("random_start")
-query_galaxy_only = param.get_bool("query_galaxy_only")
-r200_factor       = param.get_float("r200_factor") 
-cosmology_name    = param.get_string("cosmology_name")
 
-if "richness_mass_author" in param:
-    richness_mass_author = param.get_string("richness_mass_author")
-else:
-    richness_mass_author = "Rykoff_crit"
-if "mass_type" in param:
-    mass_type = param.get_string("mass_type")
-    assert (mass_type in ['critical', 'crit', 'mean']), "Mass type ("+mass_type+") not understood"
-else:
-    mass_type = "critical"
-
-if "cluster_use_random_positions" in param:
-    cluster_use_random_positions = param.get_bool("cluster_use_random_positions")
-else:
-    cluster_use_random_positions = False
-
-if "query_random" in param:
-    query_random = param.get_bool("query_random")
-else:
-    query_random = True
-
-if "query_cluster" in param:
-    query_cluster = param.get_bool("query_cluster")
-else:
-    query_cluster = True
-
-cosmo = background.set_cosmology(cosmology_name)
-dtk.ensure_dir(query_data_folder)
-
-hdulist = pyfits.open("redmapper_dr8_public_v6.3_catalog.fits")
-hdurnd  = pyfits.open("redmapper_dr8_public_v6.3_randoms.fits")
-
-
-
-#header list can be found in http://arxiv.org/pdf/1303.3562v2.pdf
-
-tdata =  hdulist[1].data
-rdata =  hdurnd[1].data
-
-red_ra = tdata.field('ra')
-red_dec= tdata.field('dec')
-red_z  = tdata.field('z_lambda')
-red_lambda=tdata.field('lambda')
-red_pcen=tdata.field('p_cen')
-
-rnd_ra = rdata.field('ra')
-rnd_dec= rdata.field('dec')
-rnd_z =  rdata.field('z')
-rnd_lambda=rdata.field('lambda')
-
-# Use the background.py specified  mass-richness definition
-# def lambda_to_m200(l):
-#     #mass richness relation from http://arxiv.org/abs/1603.06953
-#     #m200 is relative to the mean density
-# #    m200 = 10**14.344*(l/40.0)**1.33
-#     # Hu & Kravtsov 2003
-#     m200 = 1e14*np.exp(1.48+1.06*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
-#     return m200
-
-# def crit_density(z): #Msun/h /kpc^3
-#     gcm3_to_msunkpc3 = 1.477543e31
-#     density = cosmo.critical_density(z).value*gcm3_to_msunkpc3
-#     #print "crit desity(%f): %f Msun/kpc^3"%(z,density)
-#     #print "crit desity(%f): %e Msun/kpc^3"%(z,density*1000**3/cosmo.h**2)
-#     return density
-    
-# def m200_to_r200(m200,z): #r200 in kpc
-#     r200 = (3.0*m200/(4.0*200.0*np.pi*crit_density(z)))**(1.0/3.0)
-#     return r200
-
-# def r200_to_m200(r200,z):
-#     m200 = 4.0/3.0*np.pi*crit_denisty(z)*200*r200**3
-
-# def r200_to_arcmin(r200,z):
-#     arcmin = r200/cosmo.kpc_proper_per_arcmin(z).value
-#     return arcmin
-
-# def lambda_to_arcmin(l,z, richness_mass_author = "Rykoff"):
-#     return r200_to_arcmin(m200_to_r200(background.lambda_to_m200c(l, z, richness_mass_author=richness_mass_author),z),z)
-
-#print "\n\ntest:-----------: ", m200_to_r200(1e14,0)
-
-print rnd_lambda.shape
-print np.unique(rnd_lambda).shape
-
-def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot=False):
+def query_sdss_culster(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
+                       name, num, start=0, plot=False, spider_rad = None,
+                       query_galaxy_only=True,
+                       r200_factor=None,
+                       richness_mass_author=None):
     fails = []
     if(query_galaxy_only):
         query_table = "Galaxy"
@@ -135,14 +44,16 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        # rad = lambda_to_arcmin(richness,z, richness_mass_author=richness_mass_author)
-        
-        mass, r200 = background.lambda_to_m200_r200(richness,z, richness_mass_author=richness_mass_author)
-        rad = background.r200_to_arcmin(r200, z)
-        ## save target properties 
-        #cat = np.array([(ra,cat_dec[i],cat_z[i],mass,rad,r200)],
-        #dtype=[('ra','f8'),('dec','f8'),('z','f8'),('mass','f4'),('rad_arcmin','f4'),('r200','f4')])
-        #np.save(file_loc+"%s_prop%d.npy"%(name,i),cat)
+
+        # Xray Spiders have their own r200c, so we don't need to compute it. 
+        if spider_rad is None: 
+            mass, r200 = background.lambda_to_m200_r200(richness,z, richness_mass_author=richness_mass_author)
+            rad = background.r200_to_arcmin(r200, z)
+        else:
+            r200c_deg = spider_rad[i]
+            rad = r200c_deg * 60
+            r200 = background.arcmin_to_r200(rad, z)
+            mass = background.r200c_to_m200c(r200, z)
 
         hgroup = hfile.create_group("%s_prop%d"%(name,i))
         hgroup.create_dataset("ra",data=ra)
@@ -153,14 +64,16 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         hgroup.create_dataset("r200",data=r200)
         hgroup.create_dataset("richness", data = richness)
         ## Query and save objects around target
-        result = sqlcl.query("select  p.ra, p.dec, p.type,p.insidemask,p.flags_g,p.flags_i,p.flags_r,p.cModelMag_u, p.cModelMagErr_u,p.cModelMag_g, p.cModelMagErr_g,p.cModelMag_r, p.cModelMagErr_r,p.cModelMag_i, p.cModelMagErr_i,p.cModelMag_z, p.cModelMagErr_z from "+query_table+" p join dbo.fGetNearbyObjEq(%f,%f,%f) r on p.ObjID = r.ObjID"%(ra,dec,r200_factor*rad)).read()
-        # result = result.replace(',',', ')
-        # output = open("test.txt","w")
-        # output.write(result)
-        # output.close()
+
+        query_str = "select  p.ra, p.dec, p.type,p.insidemask,p.flags_g,p.flags_i,p.flags_r,p.cModelMag_u, p.cModelMagErr_u,p.cModelMag_g, p.cModelMagErr_g,p.cModelMag_r, p.cModelMagErr_r,p.cModelMag_i, p.cModelMagErr_i,p.cModelMag_z, p.cModelMagErr_z from "+query_table+" p join dbo.fGetNearbyObjEq(%f,%f,%f) r on p.ObjID = r.ObjID"%(ra, dec, r200_factor*rad)
+
+        result = sqlcl.query(query_str).read()
         # datagal = np.genfromtxt(StringIO(result),names=True,delimiter=', ',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
-        datagal = np.genfromtxt(StringIO(result),names=True,skip_header=1,delimiter=',',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
-        #np.save(file_loc+"%s%d.npy"%(name,i),datagal)
+        try:
+            datagal = np.genfromtxt(StringIO(result),names=True,skip_header=1,delimiter=',',dtype=['f8','f8','i2','i1','i8','i8','i8', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4', 'f4','f4'])
+        except ValueError as e:
+            print(query_str)
+            continue
 
         hgroup = hfile.create_group("%s%d"%(name,i))
         hgroup.create_dataset("ra",data=datagal['ra'])
@@ -201,23 +114,128 @@ def query(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name, num, start=0, plot
         np.save(file_loc+"fail_indexs.npy",fails)
     hfile.close();
 
-if query_cluster:
-    print "Querying redmapper clusters..."
-    if(cluster_size_max):
-        cluster_size = red_ra.size
-    if(cluster_use_random_positions ):
-        red_ra[:cluster_size]  = rnd_ra[:cluster_size]
-        red_dec[:cluster_size] = rnd_dec[:cluster_size]
-    query(query_data_folder,red_ra,red_dec,red_z,red_lambda,"gal",cluster_size,start=cluster_start,plot=False)
-else:
-    print "Not querying redmapper clusters..."
+def load_redmapper_cluster_fits(fname):
+    #header list can be found in http://arxiv.org/pdf/1303.3562v2.pdf
+    cat = {}
+    hdulist = pyfits.open(fname)
+    tdata =  hdulist[1].data
+    cat['ra'] = tdata.field('ra')
+    cat['dec']= tdata.field('dec')
+    cat['z']  = tdata.field('z_lambda')
+    cat['lambda']=tdata.field('lambda')
+    return cat
 
-if query_random:
-    print "Querying random fields..."
-    if(random_size_max):
-        random_size = rnd_ra.size
-    query(query_data_folder,rnd_ra,rnd_dec,rnd_z,rnd_lambda,"rnd",random_size,start=random_start,plot=False)
-else:
-    print "Not quering random fields..."
+def load_redmapper_randoms_fits(fname):
+    #header list can be found in http://arxiv.org/pdf/1303.3562v2.pdf
+    cat = {}
+    hdulist = pyfits.open(fname)
+    tdata =  hdulist[1].data
+    cat['ra'] = tdata.field('ra')
+    cat['dec']= tdata.field('dec')
+    cat['z']  = tdata.field('z')
+    cat['lambda']=tdata.field('lambda')
+    return cat
+    
+def load_spider_fits(fname):
+    cat = {}
+    hdu = pyfits.open(fname)
+    data = hdu[1].data
+    header = hdu[1].header
+    cat['ra'] = data.field('ra')
+    cat['dec'] = data.field('dec')
+    cat['z'] = data.field('z_lambda')
+    cat['lambda'] = np.zeros_like(cat['z'])
+    cat['r200c_deg']  = data.field('R200C_DEG')
+    return cat
+    
+def query(param_fname):
+    param = dtk.Param(param_fname)
+    query_data_folder = param.get_string("query_data_folder")
+    cluster_size_max  = param.get_bool("cluster_size_max")
+    cluster_size      = param.get_int("cluster_size")
+    cluster_start     = param.get_int("cluster_start")
+    random_size_max   = param.get_bool("random_size_max")
+    random_size       = param.get_int("random_size")
+    random_start      = param.get_int("random_start")
+    query_galaxy_only = param.get_bool("query_galaxy_only")
+    r200_factor       = param.get_float("r200_factor") 
+    cosmology_name    = param.get_string("cosmology_name")
+
+    if "richness_mass_author" in param:
+        richness_mass_author = param.get_string("richness_mass_author")
+    else:
+        richness_mass_author = "Rykoff_crit"
+    if "mass_type" in param:
+        mass_type = param.get_string("mass_type")
+        assert (mass_type in ['critical', 'crit', 'mean']), "Mass type ("+mass_type+") not understood"
+    else:
+        mass_type = "critical"
+
+    if "cluster_use_random_positions" in param:
+        cluster_use_random_positions = param.get_bool("cluster_use_random_positions")
+    else:
+        cluster_use_random_positions = False
+
+    if "query_random" in param:
+        query_random = param.get_bool("query_random")
+    else:
+        query_random = True
+
+    if "query_cluster" in param:
+        query_cluster = param.get_bool("query_cluster")
+    else:
+        query_cluster = True
+
+    if "spider_clusters" in param:
+        spider_clusters = param.get_bool("spider_clusters")
+    else:
+        spider_clusters = False
+    cosmo = background.set_cosmology(cosmology_name)
+    dtk.ensure_dir(query_data_folder)
 
 
+    if query_random:
+        print "Querying random fields..."
+        rand_cat = load_redmapper_randoms_fits("redmapper_dr8_public_v6.3_randoms.fits")
+        if(random_size_max):
+            random_size = cat['ra'].size
+        query_sdss_culster(query_data_folder, rand_cat['ra'],
+                           rand_cat['dec'], rand_cat['z'],
+                           rand_cat['lambda'], "rnd", random_size,
+                           start=random_start, plot=False,
+                           query_galaxy_only=query_galaxy_only,
+                           r200_factor=r200_factor,
+                           richness_mass_author=richness_mass_author)
+    else:
+        print "Not quering random fields..."
+    
+    if query_cluster:
+        print "Querying redmapper clusters..."
+        print(spider_clusters)
+        if not spider_clusters:
+            cluster_cat = load_redmapper_cluster_fits("redmapper_dr8_public_v6.3_catalog.fits")
+            spider_rad = None
+        else:
+            cluster_cat = load_spider_fits("/media/luna1/dkorytov/data/spider_xray/catCluster-SPIDERS_RASS_CLUS-v2.0.fits")
+            spider_rad = cluster_cat['r200c_deg']
+        if(cluster_size_max):
+            cluster_size = cluster_cat['ra'].size
+        if(cluster_use_random_positions ):
+            raise
+            cluster_cat['ra'][:cluster_size]  = rand_cat['ra'][:cluster_size]
+            cluster_cat['dec'][:cluster_size] = rand_cat['dec'][:cluster_size]
+        # query_cat(cat, 
+        query_sdss_culster(query_data_folder, cluster_cat['ra'],
+                           cluster_cat['dec'], cluster_cat['z'],
+                           cluster_cat['lambda'], "gal", cluster_size,
+                           start=cluster_start, plot=False,
+                           spider_rad=spider_rad,
+                           r200_factor=r200_factor,
+                           richness_mass_author=richness_mass_author,
+        )
+    else:
+        print "Not querying redmapper clusters..."
+
+
+if __name__ == "__main__":
+    query(sys.argv[1])
