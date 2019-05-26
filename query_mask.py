@@ -10,66 +10,11 @@ from StringIO import StringIO
 #from astropy.cosmology import WMAP9 as cosmo
 import time
 import h5py 
-from background import *
+import background
 
-param = dtk.Param(sys.argv[1])
-query_data_folder = param.get_string("query_data_folder")
-cosmology_name    = param.get_string("cosmology_name")
-cluster_size_max  = param.get_bool("cluster_size_max")
-cluster_size      = param.get_int("cluster_size")
-cluster_start     = param.get_int("cluster_start")
-random_size_max   = param.get_bool("random_size_max")
-random_size       = param.get_int("random_size")
-random_start      = param.get_int("random_start")
-
-query_galaxy_only = param.get_bool("query_galaxy_only")
-r200_factor       = param.get_float("r200_factor") 
-
-if "richness_mass_author" in param:
-    richness_mass_author = param.get_string("richness_mass_author")
-else:
-    richness_mass_author = "Rykoff"
-print "Richness mass author: ", richness_mass_author
-
-if "clusters_query" in param:
-    clusters_query = param.get_bool("clusters_query")
-else:
-    clusters_query = True
-
-if "randoms_query" in param:
-    randoms_query = param.get_bool("randoms_query")
-else:
-    randoms_query = True
-
-dtk.ensure_dir(query_data_folder)
-
-hdulist = pyfits.open("redmapper_dr8_public_v6.3_catalog.fits")
-hdurnd  = pyfits.open("redmapper_dr8_public_v6.3_randoms.fits")
-set_cosmology(cosmology_name)
-
-
-#header list can be found in http://arxiv.org/pdf/1303.3562v2.pdf
-
-tdata =  hdulist[1].data
-rdata =  hdurnd[1].data
-
-red_ra = tdata.field('ra')
-red_dec= tdata.field('dec')
-red_z  = tdata.field('z_lambda')
-red_lambda=tdata.field('lambda')
-red_pcen=tdata.field('p_cen')
-
-rnd_ra = rdata.field('ra')
-rnd_dec= rdata.field('dec')
-rnd_z =  rdata.field('z')
-rnd_lambda=rdata.field('lambda')
-
-
-num_pass = 0
-num_fail = 0
+from query import load_redmapper_cluster_fits, load_redmapper_randoms_fits, load_spider_fits
 
 def area_str_to_num(s):
-
     data = s.split(" ")
     return float(data[2]),float(data[3]),float(data[4]),float(data[5]),float(data[6]),float(data[7]),float(data[8]),float(data[9])
 
@@ -108,7 +53,7 @@ def single_mask_outside_r200(ra,dec,r200,mask_area,mask_type,extra_space):
     x,y =  area_str_to_lines(mask_area)
     result = True
     for i in range(0,len(x)):
-        if(rad_dist2(ra,dec,x[i],y[i])<r200+extra_space):
+        if(background.rad_dist2(ra,dec,x[i],y[i])<r200+extra_space):
             #mask corner is inside r200(+buffer space)
             #print i,"type:",mask_type,"cen:",ra,dec,"pos:",x[i],y[i],"dist:",rad_dist2(ra,dec,x[i],y[i]),"rad: ",r200
             result = False
@@ -116,9 +61,9 @@ def single_mask_outside_r200(ra,dec,r200,mask_area,mask_type,extra_space):
 
     return result
     
-def query_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name,
-               num, r200_factor=1.0, start=0, plot=False,
-               save_data=True):
+def query_sdss_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
+                    name, num, r200_factor=1.0, start=0, plot=False,
+                    save_data=True, spider_rad=None, richness_mass_author='Rykoff'):
     global num_pass
     global num_fail
     fails = []
@@ -136,20 +81,31 @@ def query_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name,
         dec = cat_dec[i]
         z   = cat_z[i]
         richness = cat_lambda[i]
-        mass, r200 = lambda_to_m200_r200(richness, z, richness_mass_author=richness_mass_author)
+        mass, r200 = background.lambda_to_m200_r200(richness, z, richness_mass_author=richness_mass_author)
+        if spider_rad is None:
+            r200_deg = background.r200_to_arcmin(r200,z)/60.0
+            rad = background.r200_to_arcmin(r200, z)*r200_factor
+        else:
+            r200c_deg = spider_rad[i]
+            rad = r200c_deg * 60
+            r200 = background.arcmin_to_r200(rad, z)
+            mass = background.r200c_to_m200c(r200, z)
 
-        r200_deg = r200_to_arcmin(r200,z)/60.0
-        rad = r200_to_arcmin(r200, z)*r200_factor
         print "ra",ra,"dec",dec
-        print "z",z,"l",richness,"mass",mass,"r200",r200,"r200 deg",r200_deg
+        print "z", z, "l", richness, "mass", mass, "r200", r200,
         ## Query and save objects around target
         rad_deg = rad/60.0
         rad_mask = rad_deg*3
         a = np.cos(np.pi*dec/180.0)
-        result = sqlcl.query("SELECT ra, dec, radius, type,area FROM Mask where ra < %f and ra > %f and dec < %f and dec > %f and type != 4"%(ra+rad_mask/a,ra-rad_mask/a,dec+rad_mask,dec-rad_mask))
+        query_str = "SELECT ra, dec, radius, type,area FROM Mask where ra < %f and ra > %f and dec < %f and dec > %f and type != 4"%(ra+rad_mask/a,ra-rad_mask/a,dec+rad_mask,dec-rad_mask)
+        result = sqlcl.query(query_str)
         result.readline()
-        data_mask = np.genfromtxt(StringIO(result.read()),names=True,delimiter=",",dtype=['f4','f4','f4','i4','S500'])
-        mask_pass = mask_outside_r200(ra,dec,rad_deg,data_mask['area'],data_mask['type'])
+        try:
+            data_mask = np.genfromtxt(StringIO(result.read()),names=True,delimiter=",",dtype=['f4','f4','f4','i4','S500'])
+            mask_pass = mask_outside_r200(ra,dec,rad_deg,data_mask['area'],data_mask['type'])
+        except ValueError as e:
+            print("failed query, auto fail")
+            mask_pass = False
         if(mask_pass):
             num_pass +=1
         else:
@@ -216,17 +172,80 @@ def query_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda, name,
     if(save_data):
         hfile.close()
 
-print "Querying redmapper clusters..."
-if(cluster_size_max):
-    cluster_size = red_ra.size
-query_mask(query_data_folder, red_ra, red_dec, red_z, red_lambda,
-           "gal", cluster_size, r200_factor=r200_factor, start=cluster_start,
-           plot=False, save_data=True)
+def query_mask(param_fname):
+    global num_pass
+    global num_fail
 
-print "Querying random fields..."
-if(random_size_max):
-     random_size = rnd_ra.size
-query_mask(query_data_folder, rnd_ra, rnd_dec, rnd_z, rnd_lambda,
-           "rnd", random_size, r200_factor=r200_factor,
-           start=random_start, plot=False, save_data=True)
+    param = dtk.Param(param_fname)
+    query_data_folder = param.get_string("query_data_folder")
+    cosmology_name    = param.get_string("cosmology_name")
+    cluster_size_max  = param.get_bool("cluster_size_max")
+    cluster_size      = param.get_int("cluster_size")
+    cluster_start     = param.get_int("cluster_start")
+    random_size_max   = param.get_bool("random_size_max")
+    random_size       = param.get_int("random_size")
+    random_start      = param.get_int("random_start")
 
+    query_galaxy_only = param.get_bool("query_galaxy_only")
+    r200_factor       = param.get_float("r200_factor") 
+
+    if "richness_mass_author" in param:
+        richness_mass_author = param.get_string("richness_mass_author")
+    else:
+        richness_mass_author = "Rykoff"
+    print "Richness mass author: ", richness_mass_author
+
+    if "clusters_query" in param:
+        clusters_query = param.get_bool("clusters_query")
+    else:
+        clusters_query = True
+
+    if "randoms_query" in param:
+        randoms_query = param.get_bool("randoms_query")
+    else:
+        randoms_query = True
+    if "spider_clusters" in param:
+        spider_clusters = param.get_bool("spider_clusters")
+    else:
+        spider_clusters = False
+
+    dtk.ensure_dir(query_data_folder)
+    background.set_cosmology(cosmology_name)
+
+    num_pass = 0
+    num_fail = 0
+    
+    
+    if clusters_query:
+        print "Querying redmapper clusters..."
+        if not spider_clusters:
+            cluster_cat = load_redmapper_cluster_fits("redmapper_dr8_public_v6.3_catalog.fits")
+            spider_rad = None
+        else:
+            cluster_cat = load_spider_fits("/media/luna1/dkorytov/data/spider_xray/catCluster-SPIDERS_RASS_CLUS-v2.0.fits")
+            spider_rad = cluster_cat['r200c_deg']
+
+        if(cluster_size_max):
+            cluster_size = cluster_cat['ra'].size
+        query_sdss_mask(query_data_folder, cluster_cat['ra'],
+                        cluster_cat['dec'], cluster_cat['z'],
+                        cluster_cat['lambda'], "gal", cluster_size,
+                        r200_factor=r200_factor, start=cluster_start,
+                        plot=False, save_data=True,
+                        spider_rad=spider_rad,
+                        richness_mass_author=richness_mass_author)
+
+    if randoms_query:
+        print "Querying random fields..."
+        rand_cat = load_redmapper_randoms_fits("redmapper_dr8_public_v6.3_randoms.fits")
+        if(random_size_max):
+             random_size = rand_cat['ra'].size
+        query_sdss_mask(query_data_folder, rand_cat['ra'],
+                        rand_cat['dec'], rand_cat['z'], rand_cat['lambda'],
+                        "rnd", random_size, r200_factor=r200_factor,
+                        start=random_start, plot=False, save_data=True,
+                        richness_mass_author=richness_mass_author)
+
+   
+if __name__ == "__main__":
+    query_mask(sys.argv[1])
