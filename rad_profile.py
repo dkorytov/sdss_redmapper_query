@@ -1,8 +1,12 @@
 #!/usr/bin/env python2.7
 import numpy as np
 import matplotlib
+import os
+# checks if there is a display to use.
+if os.environ.get('DISPLAY') is None:
+    matplotlib.use('Agg')
 
-matplotlib.use('Agg')
+
 
 
 import matplotlib.pyplot as plt
