@@ -39,20 +39,30 @@ def plot_zmr(zmr):
     plt.yscale('log')
 
 def plot_zmrs(zmr1, zmr2):
-    f, axs = plt.subplots(3,2, figsize=(10,15))
+    f, axs = plt.subplots(6,2, figsize=(10,15))
+
     colors = ['b', 'g', 'r', 'c', 'm', 'y']
+
+
+
     for m_i in range(0, len(zmr1['m_bins_cen'])):
         if m_i > 5:
             break
         xi = m_i//2
         yi = m_i%2
-        axs[xi, yi].plot(zmr1['r_bins_cen'], zmr1['zmr_gal_density'][0,m_i,:], color=colors[m_i%len(colors)], label=zmr1['label']+"[{:.0f}]".format(zmr1['zm_counts'][0,m_i]))
-        axs[xi, yi].plot(zmr2['r_bins_cen'], zmr2['zmr_gal_density'][0,m_i,:], color=colors[m_i%len(colors)], label=zmr2['label']+"[{:.0f}]".format(zmr2['zm_counts'][0,m_i]), ls='--')
-        axs[xi, yi].set_ylim([1e-1,1e3])
-        axs[xi, yi].set_yscale('log')
-        axs[xi, yi].legend(loc='best')
-        axs[xi, yi].set_title("{:.2f}<M200<{:.2f}".format(np.log10(zmr1['m_bins'][m_i]), np.log10(zmr1['m_bins'][m_i+1])))
-    plt.tight_layout()
+        axs[2*xi, yi].plot(zmr1['r_bins_cen'], zmr1['zmr_gal_density'][0,m_i,:], color=colors[m_i%len(colors)], label=zmr1['label']+"[{:.0f}]".format(zmr1['zm_counts'][0,m_i]))
+        axs[2*xi, yi].plot(zmr2['r_bins_cen'], zmr2['zmr_gal_density'][0,m_i,:], color=colors[m_i%len(colors)], label=zmr2['label']+"[{:.0f}]".format(zmr2['zm_counts'][0,m_i]), ls='--')
+        axs[2*xi, yi].set_ylim([1e-1,1e3])
+        axs[2*xi, yi].set_yscale('log')
+        axs[2*xi, yi].legend(loc='best')
+        axs[2*xi, yi].set_title("{:.2f}<M200<{:.2f}".format(np.log10(zmr1['m_bins'][m_i]), np.log10(zmr1['m_bins'][m_i+1])))
+        
+        relative_err = (zmr1['zmr_gal_density'][0,m_i,:]-zmr2['zmr_gal_density'][0,m_i,:])/((zmr1['zmr_gal_density'][0,m_i,:] + zmr2['zmr_gal_density'][0,m_i,:])/2.0)
+        axs[2*xi+1, yi].plot(zmr1['r_bins_cen'], relative_err, color=colors[m_i])
+        axs[2*xi+1, yi].axhline(0, ls='--', color='k')
+        axs[2*xi+1, yi].set_ylim([-1,+1])
+
+    f.tight_layout()
 
 def get_label(param_fname):
     if "spider" in param_fname:
