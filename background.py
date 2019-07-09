@@ -142,7 +142,13 @@ def m200m_to_m200c(m200m, z):
     cosmology.setCosmology('WMAP7')
     M200c_col, R200c_col, c200c_col = mass_adv.changeMassDefinitionCModel(m200m, z,
                                                                           "200m","200c", c_model='child18')#cat['sod_cdelta']
-    
+    return M200c_col
+
+def m200c_to_m200m(m200c, z):
+    #TODO More Accurate translation
+    cosmology.setCosmology('WMAP7')
+    M200m_col, R200m_col, c200m_col = mass_adv.changeMassDefinitionCModel(m200c, z,
+                                                                          "200c","200m", c_model='child18')#cat['sod_cdelta']
     return M200c_col
 
 def lambda_to_m200c_Baxter(l, z):
@@ -191,16 +197,17 @@ def arcmin_to_r200(arcmin, z):
 #     return r200_to_arcmin(m200_to_r200(lambda_to_m200(l),z),z)
 
 
-def get_clstr(name,folder,num,start=0,till_end=False, richness_mass_author=None):
+def get_clstr(name, folder, num, start=0, till_end=False, richness_mass_author=None, convert_m200m_to_m200c=False, convert_m200c_to_m200m=False):
     # till_end = true will make the loop continue until 
     # it fails the find a file. 
+    assert ~(convert_m200c_to_m200m and convert_m200m_to_m200c), "We cannot both options to convert on at the same time"
     print "\tloading query data... from ", folder, name
     print "\t\tstart: ",start
     if(till_end):
         print "\t\ttill_end: ",till_end
     else:
         print "\t\tnum: ", num
-
+    
     # the final outputs. Both are lists with one dictionary for each
     # cluster. The dataclstr dictionary has properties of the cluster 
     # (r200, mass etc).The datagal dictionary has np.arrays for galaxy
@@ -274,6 +281,7 @@ def get_clstr(name,folder,num,start=0,till_end=False, richness_mass_author=None)
                     dataclstr['mass'] = m200
                     dataclstr['r200'] = r200*0.7*dataclstr['a'] #convert to physical 
                     # kpc radius
+
             mask_pass = hmask_results['%d'%j]['mask_pass'][:]
             #what does this do? Skip the thing if it has no galaxies?
             #will comment out
@@ -283,6 +291,16 @@ def get_clstr(name,folder,num,start=0,till_end=False, richness_mass_author=None)
             print "\tget_clstr: read %d files in %s type: %s"%((i-1),folder,name)
             i-=1
             break
+        if convert_m200m_to_m200c:
+            m200c = m200m_to_m200c(dataclstr['mass'], dataclstr['z'])
+            r200c = m200c_to_r200c(m200c)
+            dataclstr['mass'] = m200c
+            dataclstr['r200'] = r200c*0.7*dataclstr['a']
+        if convert_m200c_to_m200m:
+            m200m = m200c_to_m200m(dataclstr['mass'], dataclstr['z'])
+            r200m = m200m_to_r200m(m200c)
+            dataclstr['mass'] = m200c
+            dataclstr['r200'] = r200c*0.7*dataclstr['a']
         datagal_i   ={}
         dataclstr_i ={}
         datagal_names = datagal.keys()
