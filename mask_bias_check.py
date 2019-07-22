@@ -15,6 +15,8 @@ print "Testing if there is any bias in the mask cut out"
 param = dtk.Param(sys.argv[1])
 mask_hfilename = param.get_string('query_data_folder')+'gal_mask.hdf5'
 gal_hfilename  =param.get_string('query_data_folder')+'query_results.hdf5'
+print mask_hfilename
+print gal_hfilename
 mask_hfile = h5py.File(mask_hfilename,'r')
 gal_hfile  = h5py.File(gal_hfilename,'r')
 
@@ -34,6 +36,12 @@ mass_bins_avg = (mass_bins[:-1]+mass_bins[1:])/2.0
 print z_bins_avg
 print mass_bins_avg
 
+pass_count = 0.0
+fail_count = 0.0
+
+pass_z_cut_count = 0.0
+fail_z_cut_count = 0.0
+
 z_pass = np.zeros_like(z_bins)
 z_fail = np.zeros_like(z_bins)
 
@@ -46,11 +54,12 @@ z_mass_fail = np.zeros((z_bins.size,mass_bins.size))
 rad_pass = np.zeros_like(rad_bins)
 rad_fail = np.zeros_like(rad_bins)
 
-for i in range(0,2000):
+i = 0
+while('%d'%i in mask_hfile):    
     mask_pass = mask_hfile['%d'%i]['mask_pass'][:]
     mass = gal_hfile['gal_prop%d'%i]['mass'] #m200 mass
     rad = gal_hfile['gal_prop%d'%i]['rad'] #rad arcmin radius on sky
-    z    = gal_hfile['gal_prop%d'%i]['z']
+    z    = gal_hfile['gal_prop%d'%i]['z'].value
     z_i = np.searchsorted(z_bins,z)-1
     m_i = np.searchsorted(mass_bins,mass)-1
     r_i = np.searchsorted(rad_bins,rad)-1
@@ -59,17 +68,28 @@ for i in range(0,2000):
         mass_pass[m_i]+=1
         z_mass_pass[z_i,m_i]+=1
         rad_pass[r_i]+=1
+        pass_count+=1
+        if 0.1 < z and z < 0.35:
+            pass_z_cut_count += 1.0
     else:
         z_fail[z_i]+=1
         mass_fail[m_i]+=1
         z_mass_fail[z_i,m_i]+=1
         rad_fail[r_i]+=1
+        fail_count+=1
+        if 0.1 < z and z < 0.35:
+            fail_z_cut_count += 1.0
+    i+=1 
 
+pass_rate = pass_count/(fail_count+pass_count)
+pass_z_cut_rate = pass_z_cut_count/(fail_z_cut_count+pass_z_cut_count)
 z_pass_rate = z_pass/(z_pass+z_fail)
 mass_pass_rate = mass_pass/(mass_pass + mass_fail)
 z_mass_pass_rate = z_mass_pass/(z_mass_pass+z_mass_fail)
 rad_pass_rate = rad_pass/(rad_pass+rad_fail)
-
+print "Pass rate: {:.3f}".format(pass_rate)
+print "Pass rate in 0.1<z<0.35: {:.3f}".format(pass_z_cut_rate)
+exit()
 plt.figure()
 plt.plot(z_bins_avg,z_pass_rate[:-1],'x-')
 err = np.sqrt(1.0/z_pass[:-1]+1.0/(z_pass[:-1]+z_fail[:-1]))
@@ -129,14 +149,14 @@ plt.grid()
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-print z_mass_pass_rate.shape
-Z,M = np.meshgrid(z_bins,np.log10(mass_bins))
-ax.plot_surface(Z,M,np.log10(z_mass_pass+z_mass_fail+1).T,rstride=1,cstride=1,linewidth=0,facecolors=cm.gray(np.nan_to_num(z_mass_pass_rate.T)))
-ax.set_ylabel('Log10 mass [Msun/h]')
-ax.set_xlabel('z')
-ax.set_zlabel('Log10 Freq')
-dtk.save_figs("figs/"+param.file+"/mask_bias_check/")
+# fig = plt.figure()
+# ax = fig.gca(projection='3d')
+# print z_mass_pass_rate.shape
+# Z,M = np.meshgrid(z_bins,np.log10(mass_bins))
+# ax.plot_surface(Z, M, np.log10(z_mass_pass+z_mass_fail+1).T, rstride=1, cstride=1, linewidth=0, facecolors=cm.gray(np.nan_to_num(z_mass_pass_rate.T)))
+# ax.set_ylabel('Log10 mass [Msun/h]')
+# ax.set_xlabel('z')
+# ax.set_zlabel('Log10 Freq')
+# dtk.save_figs("figs/"+param.file+"/mask_bias_check/")
 
 plt.show()
