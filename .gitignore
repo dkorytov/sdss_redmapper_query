@@ -1,0 +1,13 @@
+*.pyc
+*.txt
+*.tar
+*.gz
+*.fits
+tmp
+trash
+dtk
+data
+figs
+figs.bk
+old
+pyfits
