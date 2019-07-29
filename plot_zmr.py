@@ -12,8 +12,6 @@ from matplotlib import rc
 # rc('font',**{'size':
 rc('text', usetex=True)
 rc('font', **{'family':'serif', 'serif':['Computer Modern Roman'], })
-
-
 rc('font', size=18)
 # rc('legend', fontsize=13)
 
