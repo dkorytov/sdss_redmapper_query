@@ -9,12 +9,14 @@ from StringIO import StringIO
 import background
 import time
 import h5py 
+from colossus.halo import mass_adv
+from colossus.cosmology import cosmology
 
 
 def query_sdss_culster(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
-                       name, num, start=0, plot=False, spider_rad = None,
-                       query_galaxy_only=True,
-                       r200_factor=None,
+                       name, num, start=0, plot=False,
+                       spider_rad=None, spider_mean=False,
+                       query_galaxy_only=True, r200_factor=None,
                        richness_mass_author=None):
     fails = []
     if(query_galaxy_only):
@@ -54,6 +56,15 @@ def query_sdss_culster(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
             rad = r200c_deg * 60
             r200 = background.arcmin_to_r200(rad, z)
             mass = background.r200c_to_m200c(r200, z)
+            if spider_mean:
+                m200m, r200m, c200m =mass_adv.changeMassDefinitionCModel(mass, z, 
+                                                                         "200c", "200m",
+                                                                         c_model='child18')
+                mass = m200m
+                r200m_r200c_ratio = r200m/r200
+                rad *= r200m_r200c_ratio
+                r200 *= r200m_r200c_ratio
+                
 
         hgroup = hfile.create_group("%s_prop%d"%(name,i))
         hgroup.create_dataset("ra",data=ra)
@@ -149,6 +160,9 @@ def load_spider_fits(fname):
     cat = spider_nan_clean_up(cat)
     return cat
 
+def spider_mean_from_crit(spider_cat):
+    return 
+
 def spider_nan_clean_up(cat):
     slct = np.ones_like(cat['ra'], dtype=bool)
     for key in cat.keys():
@@ -200,6 +214,10 @@ def query(param_fname):
         spider_clusters = param.get_bool("spider_clusters")
     else:
         spider_clusters = False
+    if "spider_mean" in param:
+        spider_mean = param.get_bool("spider_mean")
+    else:
+        spider_mean = False
     cosmo = background.set_cosmology(cosmology_name)
     dtk.ensure_dir(query_data_folder)
 
@@ -228,6 +246,7 @@ def query(param_fname):
         else:
             cluster_cat = load_spider_fits("/media/luna1/dkorytov/data/spider_xray/catCluster-SPIDERS_RASS_CLUS-v2.0.fits")
             spider_rad = cluster_cat['r200c_deg']
+            
         if(cluster_size_max):
             cluster_size = cluster_cat['ra'].size
         if(cluster_use_random_positions ):
@@ -240,6 +259,7 @@ def query(param_fname):
                            cluster_cat['lambda'], "gal", cluster_size,
                            start=cluster_start, plot=False,
                            spider_rad=spider_rad,
+                           spider_mean=spider_mean,
                            r200_factor=r200_factor,
                            richness_mass_author=richness_mass_author,
         )
@@ -248,4 +268,5 @@ def query(param_fname):
 
 
 if __name__ == "__main__":
+    cosmology.setCosmology('WMAP7')
     query(sys.argv[1])

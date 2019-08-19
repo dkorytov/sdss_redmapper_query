@@ -12,7 +12,7 @@ import time
 import h5py 
 import background
 
-from query import load_redmapper_cluster_fits, load_redmapper_randoms_fits, load_spider_fits
+from query import load_redmapper_cluster_fits, load_redmapper_randoms_fits, load_spider_fits, spider_mean_from_crit
 
 def area_str_to_num(s):
     data = s.split(" ")
@@ -63,7 +63,8 @@ def single_mask_outside_r200(ra,dec,r200,mask_area,mask_type,extra_space):
     
 def query_sdss_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
                     name, num, r200_factor=1.0, start=0, plot=False,
-                    save_data=True, spider_rad=None, richness_mass_author='Rykoff'):
+                    save_data=True, spider_rad=None,
+                    spider_mean=False, richness_mass_author='Rykoff'):
     global num_pass
     global num_fail
     fails = []
@@ -90,7 +91,15 @@ def query_sdss_mask(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
             rad = r200c_deg * 60
             r200 = background.arcmin_to_r200(rad, z)
             mass = background.r200c_to_m200c(r200, z)
-
+            if spider_mean:
+                m200m, r200m, c200m =mass_adv.changeMassDefinitionCModel(mass, z, 
+                                                                         "200c", "200m",
+                                                                         c_model='child18')
+                mass = m200m
+                r200m_r200c_ratio = r200m/r200
+                rad *= r200m_r200c_ratio
+                r200 *= r200m_r200c_ratio
+   
         print "ra",ra,"dec",dec
         print "z", z, "l", richness, "mass", mass, "r200", r200,
         ## Query and save objects around target
@@ -208,6 +217,10 @@ def query_mask(param_fname):
         spider_clusters = param.get_bool("spider_clusters")
     else:
         spider_clusters = False
+    if "spider_mean" in param:
+        spider_mean = param.get_bool("spider_mean")
+    else:
+        spider_mean = False
 
     dtk.ensure_dir(query_data_folder)
     background.set_cosmology(cosmology_name)
