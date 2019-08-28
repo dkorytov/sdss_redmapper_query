@@ -66,7 +66,10 @@ def plot_zmrs(zmr1, zmr2):
 
 def get_label(param_fname):
     if "spider" in param_fname:
-        return "Spider Xray"
+        if "richness" in param_fname:
+            return "SPIDER richness"
+        elif "xray" in param_fname:
+            return "SPIDER x-ray"
     else:
         return "Redmapper"
 

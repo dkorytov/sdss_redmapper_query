@@ -13,7 +13,7 @@ import h5py
 import background
 
 from query import load_redmapper_cluster_fits, load_redmapper_randoms_fits, load_spider_fits, spider_mean_from_crit
-
+from query import *
 def area_str_to_num(s):
     data = s.split(" ")
     return float(data[2]),float(data[3]),float(data[4]),float(data[5]),float(data[6]),float(data[7]),float(data[8]),float(data[9])
@@ -221,6 +221,14 @@ def query_mask(param_fname):
         spider_mean = param.get_bool("spider_mean")
     else:
         spider_mean = False
+    if "spider_bcg_center" in param:
+        spider_bcg_center = param.get_bool("spider_bcg_center")
+    else:
+        spider_bcg_center = False
+    if "spider_mass_from_richness" in param:
+        spider_mass_from_richness = param.get_bool("spider_mass_from_richness")
+    else:
+        spider_mass_from_richness = False
 
     dtk.ensure_dir(query_data_folder)
     background.set_cosmology(cosmology_name)
@@ -236,7 +244,18 @@ def query_mask(param_fname):
             spider_rad = None
         else:
             cluster_cat = load_spider_fits("/media/luna1/dkorytov/data/spider_xray/catCluster-SPIDERS_RASS_CLUS-v2.0.fits")
-            spider_rad = cluster_cat['r200c_deg']
+            if spider_bcg_center:
+                print "spider bcg center"
+                spider_bcg_center = load_spiders_bcg_fits("./SpidersXclusterBCGs-v2.0.fits")
+                cluster_cat = combine_spiders_bcg(cluster_cat, spider_bcg_center)
+                cluster_cat['ra'] = cluster_cat['ra_bcg']
+                cluster_cat['dec'] = cluster_cat['dec_bcg']
+
+            if spider_mass_from_richness:
+                spider_rad = None # use the default richness -> mass conversion. 
+                print "spider mass from richness"
+            else:
+                spider_rad = cluster_cat['r200c_deg']
 
         if(cluster_size_max):
             cluster_size = cluster_cat['ra'].size

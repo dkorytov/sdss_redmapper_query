@@ -6,12 +6,13 @@ richness_mass_author Simet_mean
 
 # where all the data files are stored
 # such as query results, background estimates, etc
-query_data_folder data/normal_wmap7_spider/query_results/
+query_data_folder data/normal_wmap7_spider_mean/query_results/
 
 
 randoms_query false
 clusters_query true
 spider_clusters true
+spider_mean true
 
 # should the max number of queryable random points
 # random points be used? Setting it true ignores the

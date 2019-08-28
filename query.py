@@ -12,6 +12,11 @@ import h5py
 from colossus.halo import mass_adv
 from colossus.cosmology import cosmology
 
+def select_dict(dic, slct):
+    new_dic = {}
+    for key in dic.keys():
+        new_dic[key]= dic[key][slct]
+    return new_dic
 
 def query_sdss_culster(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
                        name, num, start=0, plot=False,
@@ -152,13 +157,52 @@ def load_spider_fits(fname):
     hdu = pyfits.open(fname)
     data = hdu[1].data
     header = hdu[1].header
+    cat['clus_id'] = data.field('clus_id')
     cat['ra'] = data.field('ra')
     cat['dec'] = data.field('dec')
     cat['z'] = data.field('z_lambda')
-    cat['lambda'] = np.zeros_like(cat['z'])
+    cat['lambda'] = data.field('LAMBDA_CHISQ_OPT') #np.zeros_like(cat['z'])
     cat['r200c_deg']  = data.field('R200C_DEG')
     cat = spider_nan_clean_up(cat)
     return cat
+
+def load_spiders_bcg_fits(fname):
+    cat = {}
+    hdu = pyfits.open(fname)
+    data = hdu[1].data
+    header = hdu[1].header
+    cat['clus_id'] = data.field('clus_id')
+    cat['ra_bcg'] = data.field('ra_bcg')
+    cat['dec_bcg'] = data.field('dec_bcg')
+    cat['z_bcg'] = data.field('CLUZSPEC')
+    return cat
+
+def combine_spiders_bcg(spider_cat, spider_bcg_cat):
+    spider_size = spider_cat['ra'].size
+    spider_cat['ra_bcg'] = np.zeros(spider_size)
+    spider_cat['dec_bcg'] = np.zeros(spider_size)
+    spider_cat['z_bcg'] = np.zeros(spider_size)
+    spider_cat['bcg_center'] = np.zeros(spider_size, dtype=bool)
+    # plt.figure()
+    # plt.plot(spider_cat['ra'], spider_cat['dec'], 'x')
+    # plt.plot(spider_bcg_cat['ra_bcg'], spider_bcg_cat['dec_bcg'], '+')
+    # plt.show()
+    num_good = 0
+    for i in range(0, spider_size):
+        clus_id = spider_cat['clus_id'][i]
+        slct = spider_bcg_cat['clus_id']==clus_id
+        if np.sum(slct) == 1:
+            spider_cat['ra_bcg'][i] = spider_bcg_cat['ra_bcg'][slct][0]
+            spider_cat['dec_bcg'][i] = spider_bcg_cat['dec_bcg'][slct][0]
+            spider_cat['z_bcg'][i] = spider_bcg_cat['z_bcg'][slct][0]
+            spider_cat['bcg_center'][i] = True
+            num_good +=1
+        elif np.sum(slct) > 0:
+            print("wtf?!")
+            exit()
+    print num_good, spider_size, np.float(num_good)/spider_size
+    spider_cat = select_dict(spider_cat, spider_cat['bcg_center']==True)
+    return spider_cat
 
 def spider_mean_from_crit(spider_cat):
     return 
@@ -166,7 +210,8 @@ def spider_mean_from_crit(spider_cat):
 def spider_nan_clean_up(cat):
     slct = np.ones_like(cat['ra'], dtype=bool)
     for key in cat.keys():
-        slct = slct & np.isfinite(cat[key])
+        if key != "clus_id":
+            slct = slct & np.isfinite(cat[key])
     result = {}
     for key in cat.keys():
         result[key] = cat[key][slct]
@@ -218,6 +263,15 @@ def query(param_fname):
         spider_mean = param.get_bool("spider_mean")
     else:
         spider_mean = False
+    if "spider_bcg_center" in param:
+        spider_bcg_center = param.get_bool("spider_bcg_center")
+    else:
+        spider_bcg_center = False
+    if "spider_mass_from_richness" in param:
+        spider_mass_from_richness = param.get_bool("spider_mass_from_richness")
+    else:
+        spider_mass_from_richness = False
+
     cosmo = background.set_cosmology(cosmology_name)
     dtk.ensure_dir(query_data_folder)
 
@@ -245,8 +299,16 @@ def query(param_fname):
             spider_rad = None
         else:
             cluster_cat = load_spider_fits("/media/luna1/dkorytov/data/spider_xray/catCluster-SPIDERS_RASS_CLUS-v2.0.fits")
-            spider_rad = cluster_cat['r200c_deg']
-            
+            if spider_bcg_center:
+                spider_bcg_center = load_spiders_bcg_fits("./SpidersXclusterBCGs-v2.0.fits")
+                cluster_cat = combine_spiders_bcg(cluster_cat, spider_bcg_center)
+                cluster_cat['ra'] = cluster_cat['ra_bcg']
+                cluster_cat['dec'] = cluster_cat['dec_bcg']
+            if spider_mass_from_richness:
+                spider_rad = None # use the default richness -> mass conversion. 
+                print "spider mass from richness"
+            else:
+                spider_rad = cluster_cat['r200c_deg']
         if(cluster_size_max):
             cluster_size = cluster_cat['ra'].size
         if(cluster_use_random_positions ):
