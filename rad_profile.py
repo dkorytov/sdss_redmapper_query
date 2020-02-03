@@ -1,4 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
+
+from __future__ import print_function
+
 import numpy as np
 import matplotlib
 import os
@@ -96,7 +99,7 @@ elif(galaxy_type == 2):
 elif(galaxy_type == 3):
     galaxy_type_name = "non-red"
 else:
-    print "unknwon galaxy type"
+    print("unknwon galaxy type")
     raise 
 if(galaxy_weight == 1):
     galaxy_weight_name = "normal"
@@ -105,7 +108,7 @@ elif(galaxy_weight == 2):
 elif(galaxy_weight == 3):
     galaxy_weight_name = 'red squence rykoff'
 else:
-    print "unknown galaxy weight"
+    print("unknown galaxy weight")
     raise
 
 if(galaxy_color_type ==1):
@@ -160,20 +163,30 @@ def rad_dist2(ra1,dec1,ra2,dec2):
     radial_dist= 2.0*np.arcsin(np.sqrt(np.sin(del_dec/2.0)**2+np.cos(dec1)*np.cos(dec2)*np.sin(del_ra/2.0)**2))
     return rad2deg(radial_dist)
 
+def get_average_median_cluster_redshift(dataclstr):
+    z = []
+    for clstr in dataclstr:
+        z.append(clstr['z'])
+    z = np.array(z)
+    slct = (z<0.35) & (z>0.15)
+    print('Mean:   ', np.mean(z[slct]))
+    print('Median: ', np.median(z[slct]))
+    exit()
 ########################
 # Getting cluster data #
 ########################
 
-print "Loading clusters..."
-print query_cluster_num
+print("Loading clusters...")
+print(query_cluster_num)
 [dataclstr,datagal,data_pass_mask,clstr_num] = get_clstr(query_type,
                                                          query_results,
                                                          query_cluster_num,
                                                          till_end = query_cluster_all,
                                                          richness_mass_author = richness_mass_author)
 #[dataclstr,datagal,clstr_num] = get_clstr("gal",query_results,10)
-print clstr_num
-print "done."
+print(clstr_num)
+get_average_median_cluster_redshift(dataclstr)
+print("done.")
 
 
 
@@ -264,7 +277,7 @@ mass_bins_avg = (mass_bins[0:-1]+mass_bins[1:])/2.0
 #assign a z and mass bin to each cluster 
 clstr_z_bin = np.ones(clstr_num,dtype='i4')
 clstr_m200_bin = np.ones(clstr_num,dtype='i4')
-print clstr_num
+print(clstr_num)
 for i in range(0,clstr_num):
     clstr_z_bin[i] = np.digitize(np.atleast_1d(dataclstr[i]['z']),z_bins)-1
     clstr_m200_bin[i] = np.digitize(np.atleast_1d(dataclstr[i]['m200']),mass_bins)-1
@@ -341,7 +354,7 @@ for i in range(0,clstr_num):
         #does have a mask in the cluster region -> ignore
         continue
     if(i%1000==0):
-        print i,"/",clstr_num
+        print(i,"/",clstr_num)
 
     # calculate the area of each radial bin
     bin_area_clstr = np.copy(bin_area)
@@ -562,7 +575,7 @@ save_radial_profile(result_folder,
 #                     zmr_gal_density_var,
 #                     zm_counts)
 
-print clstr_num        
+print(clstr_num        )
 h=h/clstr_num
 stk_bksub=stk_bksub/clstr_num
 stk_rden/=clstr_num
@@ -690,7 +703,7 @@ for i in range(0,z_bins_num-1):
         c_lvls=dtk.conf_interval(smooth_h,contain_lvls)
         tmp2 = dtk.contour_labels(contain_lvls,c_lvls)
         [m_avgs,clr_avgs]= get_color_mag_bin_avgs()
-        cs = plt.contour(m_avgs,clr_avgs,smooth_h.T,c_lvls,colors='k')
+        cs = plt.contour(m_avgs, clr_avgs, smooth_h.T, sorted(c_lvls), colors='k')
         #plt.clabel(cs,fmt = tmp2,colors='k') <- This doesn't work anymore?!
     if(RS_line_plot):
         RS_scatter = 0.05
@@ -711,33 +724,33 @@ for i in range(0,z_bins_num-1):
     plt.tight_layout()
     if(False):
         plt.figure(figsize=(15,4))
-   	plt.subplot(1,4,1)
-   	H_radial_sum = np.zeros_like(h_all)
-   	total_radial_area = np.pi
-   	for j in range(0,mass_bins_num-1):
-   	    H_radial_mass_sum = np.zeros_like(H_radial_sum)
-   	    for k in range(0,radial_bin_num-1):
-   	        H_radial_mass_sum +=h_zm_rad_clr_mg[i,j,k]*bin_area[k]/np.pi
-   	    H_radial_sum += H_radial_mass_sum*hist_mass[j]/np.sum(hist_mass)
-   	plt.pcolor(mag_bins,clr_bins,H_radial_sum.T,cmap=plt.cm.BuPu,norm=LogNorm())
-   	if(np.max(H_radial_sum) != np.min(H_radial_sum)):
-   	    plt.colorbar()
-   	plt.title("radial sum: %e"%np.sum(H_radial_sum))
-   	plt.subplot(1,4,2)
-   	plt.pcolor(mag_bins,clr_bins,h_all.T,cmap=plt.cm.BuPu,norm=LogNorm())
-   	if(np.max(h_all) != np.min(h_all)):
-   	    plt.colorbar()
-   	plt.title("normal sum: %e"%np.sum(h_all))
-   	plt.subplot(1,4,3)
-   	h_diff = h_all - H_radial_sum
-   	print np.nanmean(h_all/H_radial_sum), 1.0/ np.nanmean(h_all/H_radial_sum)
-   	plt.pcolor(mag_bins,clr_bins,h_diff.T,cmap=plt.cm.RdBu)
-   	plt.title("diff sum: %e"%np.sum(h_diff))
-   	plt.subplot(1,4,4)
-   	plt.pcolor(mag_bins,clr_bins,H_bkgnd_sqkpc([z_bins[i+1]]).T,cmap=plt.cm.BuPu,norm=LogNorm())
-   	plt.colorbar()
-   	plt.title("bkgnd sum: %e"%np.sum(H_bkgnd_sqkpc([z_bins[i+1]])))
-   	plt.tight_layout()
+        plt.subplot(1,4,1)
+        H_radial_sum = np.zeros_like(h_all)
+        total_radial_area = np.pi
+        for j in range(0,mass_bins_num-1):
+            H_radial_mass_sum = np.zeros_like(H_radial_sum)
+            for k in range(0,radial_bin_num-1):
+                H_radial_mass_sum +=h_zm_rad_clr_mg[i,j,k]*bin_area[k]/np.pi
+            H_radial_sum += H_radial_mass_sum*hist_mass[j]/np.sum(hist_mass)
+        plt.pcolor(mag_bins,clr_bins,H_radial_sum.T,cmap=plt.cm.BuPu,norm=LogNorm())
+        if(np.max(H_radial_sum) != np.min(H_radial_sum)):
+            plt.colorbar()
+        plt.title("radial sum: %e"%np.sum(H_radial_sum))
+        plt.subplot(1,4,2)
+        plt.pcolor(mag_bins,clr_bins,h_all.T,cmap=plt.cm.BuPu,norm=LogNorm())
+        if(np.max(h_all) != np.min(h_all)):
+            plt.colorbar()
+        plt.title("normal sum: %e"%np.sum(h_all))
+        plt.subplot(1,4,3)
+        h_diff = h_all - H_radial_sum
+        print(np.nanmean(h_all/H_radial_sum), 1.0/ np.nanmean(h_all/H_radial_sum))
+        plt.pcolor(mag_bins,clr_bins,h_diff.T,cmap=plt.cm.RdBu)
+        plt.title("diff sum: %e"%np.sum(h_diff))
+        plt.subplot(1,4,4)
+        plt.pcolor(mag_bins,clr_bins,H_bkgnd_sqkpc([z_bins[i+1]]).T,cmap=plt.cm.BuPu,norm=LogNorm())
+        plt.colorbar()
+        plt.title("bkgnd sum: %e"%np.sum(H_bkgnd_sqkpc([z_bins[i+1]])))
+        plt.tight_layout()
 
 
 

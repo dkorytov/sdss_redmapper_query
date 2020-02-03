@@ -25,7 +25,7 @@ def set_cosmology(name):
     elif(name == 'wmap7'):
         cosmo = cosmowmap7
     else:
-        print "Cosmology not defined"
+        print("Cosmology not defined")
         raise()
     return cosmo
 
@@ -70,7 +70,7 @@ def lambda_to_m200_r200(l, z, richness_mass_author="Rykoff_crit"):
     elif mass_type == "mean":
         r200 = m200m_to_r200m(m200, z)
     else:
-        print richness_mass_author, "isn't a on the list of defined richness-mass relations"
+        print(richness_mass_author, "isn't a on the list of defined richness-mass relations")
         raise KeyError("\'{}\' isn't a on the list of defined richness-mass relations".format(richness_mass_author))
     a = 1.0/(z+1.0)
     return m200, r200*a
@@ -89,7 +89,7 @@ def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
     elif richness_mass_author == "Baxter_mean":
         return  lambda_to_m200m_Baxter(l, z)
     else:
-        print richness_mass_author, "isn't a on the list of defined richness-mass relations"
+        print(richness_mass_author, "isn't a on the list of defined richness-mass relations")
         raise KeyError("\'{}\' isn't a on the list of defined richness-mass relations".format(richness_mass_author))
 
 def lambda_to_m200m_Simet(l, z):
@@ -201,12 +201,12 @@ def get_clstr(name, folder, num, start=0, till_end=False, richness_mass_author=N
     # till_end = true will make the loop continue until 
     # it fails the find a file. 
     assert ~(convert_m200c_to_m200m and convert_m200m_to_m200c), "We cannot both options to convert on at the same time"
-    print "\tloading query data... from ", folder, name
-    print "\t\tstart: ",start
+    print( "\tloading query data... from ", folder, name)
+    print( "\t\tstart: ",start)
     if(till_end):
-        print "\t\ttill_end: ",till_end
+        print( "\t\ttill_end: ",till_end)
     else:
-        print "\t\tnum: ", num
+        print( "\t\tnum: ", num)
     
     # the final outputs. Both are lists with one dictionary for each
     # cluster. The dataclstr dictionary has properties of the cluster 
@@ -220,16 +220,16 @@ def get_clstr(name, folder, num, start=0, till_end=False, richness_mass_author=N
     j = start
     if(till_end):
         j = num-1
-    print folder+'query_results.hdf5'
-    print folder+name+'_mask.hdf5'
+    print( folder+'query_results.hdf5')
+    print( folder+name+'_mask.hdf5')
     hquery_results = h5py.File(folder+'query_results.hdf5','r')
     hmask_results  = h5py.File(folder+name+'_mask.hdf5','r')
-    print "\t"+folder+'query_results.hdf5'
+    print( "\t"+folder+'query_results.hdf5')
     while ((j<num+1) | till_end):
         j = i
         i=i+1
         if(i%1000==0):
-            print "\t",i
+            print("\t",i)
         j=j+1
         # if(till_end):
         #        j=num-2
@@ -288,7 +288,7 @@ def get_clstr(name, folder, num, start=0, till_end=False, richness_mass_author=N
             #if(datagal.size ==0):
             #     continue
         except KeyError as ie:
-            print "\tget_clstr: read %d files in %s type: %s"%((i-1),folder,name)
+            print("\tget_clstr: read %d files in %s type: %s"%((i-1),folder,name))
             i-=1
             break
         if convert_m200m_to_m200c:
@@ -364,7 +364,7 @@ def get_clstr(name, folder, num, start=0, till_end=False, richness_mass_author=N
         all_dataclstr.append(dataclstr_i)
         all_mask_pass.append(mask_pass)
         clstr_num = i # the number of clusters in the output
-    print "\tdone."
+    print("\tdone.")
     return [all_dataclstr,all_datagal,all_mask_pass,clstr_num]
 
 def set_datagal_z_dep(z,datagal_i):
@@ -410,7 +410,7 @@ def rad_dist2(ra1,dec1,ra2,dec2):
 
 
 def circle_radec(ra1,dec1,radius):
-    print "circle_radec"
+    print("circle_radec")
     ra1 = deg2rad(ra1)
     dec1 = deg2rad(dec1)
     size = 12
@@ -594,9 +594,9 @@ def make_background_estimates(query_results,background_folder,
                               use_num=1000,
                               background_r200_factor=1.0):
     background_file = background_file_name(background_folder,galaxy_type,galaxy_weight)
-    print background_file
+    print(background_file)
     if(not os.path.isfile(background_file) or force):
-        print "Calculating new background estimates..."
+        print("Calculating new background estimates...")
         if(use_all):
             [dataclstr,datagal,rnd_mask_pass,rnd_num]= get_clstr("rnd",query_results,-1, till_end=True)
         else:
@@ -629,12 +629,12 @@ def make_background_estimates(query_results,background_folder,
                 [h,_,_]=histogram2d_wrapper(datagal[j]['mag'][slct], datagal[j]['clr'][slct],
                                             weights=weights[slct], bins=(m_i_bins,clr_gr_bins))
                 if(np.abs(1.0-np.sum(weights[slct])/np.sum(h)) > 1e-3):
-                    print "cnt: %d, h: %d diff:%f"%(np.sum(weights[slct]),np.sum(h),np.abs(1.0-np.sum(weights[slct])/np.sum(h)))
+                    print("cnt: %d, h: %d diff:%f"%(np.sum(weights[slct]),np.sum(h),np.abs(1.0-np.sum(weights[slct])/np.sum(h))))
                 H_background+=h/(dataclstr[j]['sq_deg']*(background_r200_factor)**2)/get_color_mag_bin_area()
                 #print "[%d] z:%f counts: %f counts/sqdeg: %f counts/sqkpc: %f"%(j,clstr_z[j],tmp,tmp2,tmp3)
             H_z_backgrounds[i,:,:]=H_background/float(used_number)
             backgrounds_counts[i] =np.average(counts)
-            print "z=%.2f, cnt: %f, H_z: %f "%(z,backgrounds_counts[i],np.sum(H_z_backgrounds[i])*get_color_mag_bin_area())
+            print( "z=%.2f, cnt: %f, H_z: %f "%(z,backgrounds_counts[i],np.sum(H_z_backgrounds[i])*get_color_mag_bin_area()))
             if(False):
                 plt.figure()
                 plt.pcolor(m_i_bins,clr_gr_bins,H_z_backgrounds[i].T,cmap=plt.cm.BuPu,norm=LogNorm())
@@ -644,7 +644,7 @@ def make_background_estimates(query_results,background_folder,
                 plt.show()
         dtk.ensure_dir(background_folder)
         np.savez(background_file,z=zbins,cnt=backgrounds_counts,H=H_z_backgrounds)
-        print "done."
+        print("done.")
     return 
 
 def get_background_estimate_sqdeg(background_folder,galaxy_type,galaxy_weight):
@@ -768,7 +768,7 @@ class H_Interpol():
         [self.m_i,self.clr]=get_color_mag_bin_avgs()
 
     def __getitem__(self,z):
-        print "interpolating z:",z
+        print("interpolating z:",z)
         [mi_avg,clr_avg]= get_color_mag_bin_avgs()
         H_of_z = np.zeros((len(mi_avg),len(clr_avg)))
         for m_i in range(0,len(mi_avg)):
@@ -932,9 +932,9 @@ def print_out_clr_mg (clr_mg):
     [clr,mg]= get_color_mag_bins()
     for i in range(0,len(mg)-1):
         for j in range(0,len(clr)-1):
-            print "%1.1f"%clr_mg[j,i],
-        print "\n"
-    print "\n==========\n\n"
+            print( "%1.1f"%clr_mg[j,i],)
+        print("\n")
+    print( "\n==========\n\n")
     return
 
 

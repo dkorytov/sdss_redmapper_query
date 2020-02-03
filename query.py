@@ -1,11 +1,14 @@
 #!/usr/bin/env python2.7
+
+from __future__ import print_function, division 
+
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import sqlcl
 from astropy.io import fits as pyfits
 import dtk
-from StringIO import StringIO
+from io import StringIO
 import background
 import time
 import h5py 
@@ -28,12 +31,12 @@ def query_sdss_culster(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
         query_table = "Galaxy"
     else:
         query_table = "PhotoObj"
-    print "querying..."
+    print("querying...")
     hfile = h5py.File(file_loc+"query_results.hdf5",mode='a')
     for i in range(start,num):
         #try:
         start = time.time()
-        print "%d/%d"%(i+1,num)
+        print("%d/%d"%(i+1,num))
         keys = hfile.keys()
         if("%s%d"%(name,i) in keys and "%s_prop%d"%(name,i) in keys):
             continue;
@@ -111,7 +114,7 @@ def query_sdss_culster(file_loc, cat_ra, cat_dec, cat_z, cat_lambda,
         hgroup.create_dataset("mag_err_z",data=datagal['cModelMagErr_z'])
 
         end = time.time()
-        print " time: %.2f"%float(end-start)
+        print(" time: %.2f"%float(end-start))
         if(plot):
             plt.figure()
             legends = ["uknown","cosmic_ray","defect","galaxy","ghost","knownobj","star","trail","sky","notatype"]
@@ -200,7 +203,7 @@ def combine_spiders_bcg(spider_cat, spider_bcg_cat):
         elif np.sum(slct) > 0:
             print("wtf?!")
             exit()
-    print num_good, spider_size, np.float(num_good)/spider_size
+    print(num_good, spider_size, np.float(num_good)/spider_size)
     spider_cat = select_dict(spider_cat, spider_cat['bcg_center']==True)
     return spider_cat
 
@@ -277,7 +280,7 @@ def query(param_fname):
 
 
     if query_random:
-        print "Querying random fields..."
+        print("Querying random fields...")
         rand_cat = load_redmapper_randoms_fits("redmapper_dr8_public_v6.3_randoms.fits")
         if(random_size_max):
             random_size = cat['ra'].size
@@ -289,10 +292,10 @@ def query(param_fname):
                            r200_factor=r200_factor,
                            richness_mass_author=richness_mass_author)
     else:
-        print "Not quering random fields..."
+        print ("Not quering random fields...")
     
     if query_cluster:
-        print "Querying redmapper clusters..."
+        print( "Querying redmapper clusters...")
         print(spider_clusters)
         if not spider_clusters:
             cluster_cat = load_redmapper_cluster_fits("redmapper_dr8_public_v6.3_catalog.fits")
@@ -306,7 +309,7 @@ def query(param_fname):
                 cluster_cat['dec'] = cluster_cat['dec_bcg']
             if spider_mass_from_richness:
                 spider_rad = None # use the default richness -> mass conversion. 
-                print "spider mass from richness"
+                print("spider mass from richness")
             else:
                 spider_rad = cluster_cat['r200c_deg']
         if(cluster_size_max):
@@ -326,7 +329,7 @@ def query(param_fname):
                            richness_mass_author=richness_mass_author,
         )
     else:
-        print "Not querying redmapper clusters..."
+        print("Not querying redmapper clusters...")
 
 
 if __name__ == "__main__":

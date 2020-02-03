@@ -1,4 +1,7 @@
 #!/usr/bin/python2
+
+from __future__ import print_function, division 
+
 """>> sqlcl << command line query tool by Tamas Budavari <budavari@jhu.edu>
 Usage: sqlcl [options] sqlfile(s)
 
@@ -22,9 +25,9 @@ default_fmt='csv'
 
 def usage(status, msg=''):
     "Error message and usage"
-    print __doc__
+    print(__doc__)
     if msg:
-        print '-- ERROR: %s' % msg
+        print('-- ERROR: %s' % msg)
     sys.exit(status)
 
 def filtercomment(sql):
@@ -63,7 +66,7 @@ def main(argv):
     # Parse command line
     try:
         optlist, args = getopt.getopt(argv[1:],'s:f:q:vlh?')
-    except getopt.error, e:
+    except getopt.error as e:
         usage(1,e)
         
     for o,a in optlist:
@@ -81,7 +84,7 @@ def main(argv):
     for fname in args:
         try:
             queries.append(open(fname).read())
-        except IOError, e:
+        except IOError as e:
             usage(1,e)
 
     # Run all queries sequentially
