@@ -86,11 +86,20 @@ if 'richness_mass_author' in param:
     richness_mass_author = param.get_string("richness_mass_author")
 else:
     richness_mass_author = None
+
+if 'convert_m200m_to_m200c' in param:
+    convert_m200m_to_m200c = param.get_bool('convert_m200m_to_m200c')
+else:
+    convert_m200m_to_m200c = False
+if 'convert_m200c_to_m200m' in param:
+    convert_m200c_to_m200m = param.get_bool('convert_m200c_to_m200m')
+else:
+    convert_m200c_to_m200m = False
 #######################
 ## Processing Params ##
 #######################
 
-background_z_bins = np.linspace(background_z_start, background_z_end, background_z_num)
+background_z_bins = np.linspace(background_z_start, background_z_end, int(background_z_num))
 
 if(galaxy_type == 1):
     galaxy_type_name = "all"
@@ -171,7 +180,7 @@ def get_average_median_cluster_redshift(dataclstr):
     slct = (z<0.35) & (z>0.15)
     print('Mean:   ', np.mean(z[slct]))
     print('Median: ', np.median(z[slct]))
-    exit()
+
 ########################
 # Getting cluster data #
 ########################
@@ -182,7 +191,9 @@ print(query_cluster_num)
                                                          query_results,
                                                          query_cluster_num,
                                                          till_end = query_cluster_all,
-                                                         richness_mass_author = richness_mass_author)
+                                                         richness_mass_author = richness_mass_author,
+                                                         convert_m200c_to_m200m=convert_m200c_to_m200m,
+                                                         convert_m200m_to_m200c=convert_m200m_to_m200c)
 #[dataclstr,datagal,clstr_num] = get_clstr("gal",query_results,10)
 print(clstr_num)
 get_average_median_cluster_redshift(dataclstr)
@@ -545,6 +556,7 @@ plt.title("Color Errors")
 ################################################
 # save the clr/mag radial profile into a file  #
 ################################################
+print(result_folder, '(((')
 save_radial_profile(result_folder,
                     galaxy_type,
                     galaxy_weight,
