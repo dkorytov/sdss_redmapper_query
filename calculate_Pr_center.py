@@ -113,6 +113,7 @@ def calculate_Pr_center2(fname):
     for i in range(len(cat['z_lambda'])):
     # for i in range(1000):
         z = cat['z_lambda'][i]
+        a = 1.0/(1.0+z)
         prob = cat['p_cen'][i]
         ra = cat['ra_cen'][i]
         dec = cat['dec_cen'][i]
@@ -120,10 +121,12 @@ def calculate_Pr_center2(fname):
         d_kpc = cosmowmap7.kpc_proper_per_arcmin(z).value * (60.0*d_r)
         probs += list(prob)
         d_kpcs += list(d_kpc)
-        non_center_avg.append(np.average(d_kpcs[1:]))
-        non_center_avg_prob.append(np.average(d_kpc[1:], weights=prob[1:]))
+        ## Converting from physical kpc to comoving kpc/h
+        ## 1.27323
+        non_center_avg.append(np.average(d_kpcs[1:])*0.7/a)
+        non_center_avg_prob.append(np.average(d_kpc[1:], weights=prob[1:])*0.7/a)
         correct_prop.append(prob[0])
-        radii_to_save.append(select_radius(prob, d_kpc))
+        radii_to_save.append(select_radius(prob, d_kpc)*0.7/a)
         if i%1000 == 0:
             print('\t{:.3f}\r'.format(i/len(cat['z_lambda'])), end='')
     print()
@@ -139,25 +142,25 @@ def calculate_Pr_center2(fname):
     plt.yscale('log')
     
     plt.figure()
-    plt.hist(d_kpcs/1000.0, bins=100, histtype='step', label='unweighted')
-    plt.hist(d_kpcs/1000.0, bins=100, weights=probs, histtype='step', label='weighted')
+    plt.hist(d_kpcs/1000.0, bins=64, histtype='step', label='unweighted')
+    plt.hist(d_kpcs/1000.0, bins=64, weights=probs, histtype='step', label='weighted')
     plt.ylabel('Counts')
-    plt.xlabel('Clustering Miscentering Distance\n[Mpc Physical]')
+    plt.xlabel('Clustering Miscentering Distance\n[h$^{-1}$ Mpc Comoving]')
     plt.legend(framealpha=0.0)
     # plt.yscale('log')
     plt.tight_layout()
 
     num_clusters = len(cat['z_lambda'])
     avg_displaced = np.sum((probs*d_kpcs))/num_clusters
-    print("Average Miscentering: {:2f} [kpc physical]".format(avg_displaced))
-    print("Average Distance when Miscentered: {:.2f} [kpc physical]".format(np.average(non_center_avg_prob)))
+    print("Average Miscentering: {:2f} [comoving kpc/h]".format(avg_displaced))
+    print("Average Distance when Miscentered: {:.2f} [comoving kpc/h]".format(np.average(non_center_avg_prob)))
     print("Miscentering Prob: {:.2f}".format(np.average(correct_prop)))
 
 def test_saved_data(fname='data/Pr_center/distribution1.hdf5'):
     hfile = h5py.File(fname,'r')
     data = hfile['radii'][:]
     plt.figure()
-    plt.hist(data/1000.0, bins=100, histtype='step')
+    plt.hist(data/1000, bins=100, histtype='step')
     plt.ylabel('Counts')
     plt.xlabel('Distance [Mpc Physical]')
     plt.yscale('log')
