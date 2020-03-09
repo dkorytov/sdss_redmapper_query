@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 from __future__ import print_function, division
 import numpy as np
@@ -47,7 +47,7 @@ def plot_zmr(zmr):
 def plot_zmrs(zmr1, zmr2):
     f, axs = plt.subplots(6,2, figsize=(10,15))
 
-    colors = ['b', 'g', 'r', 'c', 'm', 'y']
+    colors = ['tab:red', 'tab:blue', 'r', 'c', 'm', 'y']
     for m_i in range(0, len(zmr1['m_bins_cen'])):
         if m_i > 5:
             break
@@ -73,7 +73,7 @@ def plot_zmrs2(zmr1, zmr2):
     nrow = 3
     ncol = 2
     f, axs = plt.subplots(ncol, nrow, figsize=(15, 6), sharex=True, sharey=True)
-    colors=['r', 'b', 'g', 'c', 'm', 'y'] 
+    colors=['tab:red', 'tab:blue', 'g', 'c', 'm', 'y'] 
     f2, axs2 = plt.subplots(ncol, nrow, figsize=(15, 4), sharex=True, sharey=True)
 
     
@@ -83,7 +83,7 @@ def plot_zmrs2(zmr1, zmr2):
         print(x_index, y_index)
         ax = axs[x_index, y_index]
         ax2 = axs2[x_index, y_index]
-        for zmr, color in zip([zmr1, zmr2], ['b', 'r']):
+        for zmr, color in zip([zmr1, zmr2], ['tab:red', 'tab:blue']):
             y1 = zmr['zmr_gal_density'][0,m_index,:]
             yerr1 = zmr['zmr_gal_density_err'][0,m_index,:]
             y2 = zmr1['zmr_gal_density'][0,m_index,:]
@@ -109,11 +109,11 @@ def plot_zmrs2(zmr1, zmr2):
             ax.set_xlabel("r/R$_{200m}$")
             ax2.set_xlabel("r/R$_{200m}$")
         if x_index == 0 and y_index== 0:
-            ax.plot([],[], 'b', lw=2, label='RedMaPPer')
+            ax.plot([],[], 'tab:red', lw=2, label='RedMaPPer')
             ax.legend(loc='upper right', framealpha=0.0)            
 
         if x_index == 0 and y_index== 1:
-            ax.plot([],[], 'r', lw=2, label='SPIDERS')
+            ax.plot([],[], 'tab:blue', lw=2, label='SPIDERS')
             ax.legend(loc='upper right', framealpha=0.0)
         # 2nd plot comparing ratios
         # y = zmr2['zmr_gal_density'][0,m_index,:]/zmr1['zmr_gal_density'][0,m_index,:]
@@ -147,9 +147,16 @@ def compare_zmrs(param_fname1, param_fname2):
     plot_zmr(zmr2)
     plot_zmrs(zmr1, zmr2)
     plot_zmrs2(zmr1, zmr2)
-
+    
 
 if __name__ == "__main__":
-    compare_zmrs(sys.argv[1], sys.argv[2])
-    dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
+    if len(sys.argv) > 2:
+        compare_zmrs(sys.argv[1], sys.argv[2])
+        dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
+    else:
+        arg1 = 'params/rad_profile/mstar0_wmap7_simet_mean4.param'
+        # arg2 = 'params/rad_profile/mstar0_wmap7_spider_mean_bcg.param'
+        arg2 = 'params/rad_profile/spider/mstar0_wmap7_spider_crit_xray_bcg.param'
+        compare_zmrs(arg1, arg2)
+        dtk.save_figs("figs"+__file__+"/redmapper_vs_spiders/", extension='.pdf')
     plt.show()
