@@ -293,12 +293,12 @@ def get_clstr(name, folder, num, start=0, till_end=False, richness_mass_author=N
             break
         if convert_m200m_to_m200c:
             m200c = m200m_to_m200c(dataclstr['mass'], dataclstr['z'])
-            r200c = m200c_to_r200c(m200c)
+            r200c = m200c_to_r200c(m200c, dataclstr['z'])
             dataclstr['mass'] = m200c
             dataclstr['r200'] = r200c*0.7*dataclstr['a']
         if convert_m200c_to_m200m:
             m200m = m200c_to_m200m(dataclstr['mass'], dataclstr['z'])
-            r200m = m200m_to_r200m(m200c)
+            r200m = m200m_to_r200m(m200c, dataclstr['z'])
             dataclstr['mass'] = m200c
             dataclstr['r200'] = r200c*0.7*dataclstr['a']
         datagal_i   ={}
