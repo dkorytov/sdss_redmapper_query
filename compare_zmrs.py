@@ -95,7 +95,7 @@ def plot_zmrs2(zmr1, zmr2):
             ax2.plot(zmr['r_bins_cen'], y1/y2, color=color)
             ax2.fill_between(zmr['r_bins_cen'], y1/y2-yerr1/y2, y1/y2+yerr1/y2, color=color, alpha=0.3)
         ax.set_yscale('log')
-        mass_label="{:.2f}$<$M$_{{200m}}<${:.2f}".format(np.log10(zmr1['m_bins'][m_index]), np.log10(zmr1['m_bins'][m_index+1]))
+        mass_label="{:.2f}$<$M$_{{200c}}<${:.2f}".format(np.log10(zmr1['m_bins'][m_index]), np.log10(zmr1['m_bins'][m_index+1]))
         ax.text(0.1, 0.1, mass_label, transform=ax.transAxes)
         ax2.text(0.1, 0.1, mass_label, transform=ax2.transAxes)
         ax.set_ylim(1e-1, 1e3)
@@ -103,11 +103,11 @@ def plot_zmrs2(zmr1, zmr2):
         ax2.set_ylim(0,2)
 
         if y_index == 0:
-            ax.set_ylabel("$\Sigma_{gal}$ [R$_{200m}^{-2}$]")
+            ax.set_ylabel("$\Sigma_{gal}$ [R$_{200c}^{-2}$]")
             ax2.set_ylabel("$\Sigma_{gal}/\Sigma_{gal}^{redMaPPer}$")
         if x_index == 1:
-            ax.set_xlabel("r/R$_{200m}$")
-            ax2.set_xlabel("r/R$_{200m}$")
+            ax.set_xlabel("r/R$_{200c}$")
+            ax2.set_xlabel("r/R$_{200c}$")
         if x_index == 0 and y_index== 0:
             ax.plot([],[], 'tab:red', lw=2, label='RedMaPPer')
             ax.legend(loc='upper right', framealpha=0.0)            
@@ -122,7 +122,7 @@ def plot_zmrs2(zmr1, zmr2):
         # ax2.plot(zmr1['r_bins_cen'], y, color=colors[m_index])
         # ax2.fill_between(zmr1['r_bins_cen'], y-y_err, y+y_err, alpha=0.3, color=colors[m_index])
         # ax2.fill_between(zmr1['r_bins_cen'], 1-y1_err, 1-y_err, alpha=0.3, color=colors[m_index])
-        # ax2.set_xlabel('r/R$_{200m}$')
+        # ax2.set_xlabel('r/R$_{200c}$')
         # ax2.set_ylabel('$\Sigma^{SPIDERS}_{gal}/\Sigma^{redMaPPer}_{gal}$')
     
     f.tight_layout()
@@ -158,5 +158,5 @@ if __name__ == "__main__":
         # arg2 = 'params/rad_profile/mstar0_wmap7_spider_mean_bcg.param'
         arg2 = 'params/rad_profile/spider/mstar0_wmap7_spider_crit_xray_bcg.param'
         compare_zmrs(arg1, arg2)
-        dtk.save_figs("figs"+__file__+"/redmapper_vs_spiders/", extension='.pdf')
+        dtk.save_figs("figs/"+__file__+"/redmapper_vs_spiders/", extension='.pdf')
     plt.show()

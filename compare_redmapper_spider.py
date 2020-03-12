@@ -136,17 +136,27 @@ def find_match(spider_cat, redmapper_cat):
     plt.tight_layout()
         
     plt.figure()
+    plt.ylim([1e14, 3e15])
+    plt.xlim([1e14, 3e15])
     plt.loglog(spider_cat['m200m'][slct], redmapper_cat['m200m'][slct], '.')
     plt.xlabel(r'SPIDERS M$_{200m}$ [M$_\odot$/h]')
     plt.ylabel('redMaPPer M$_{200m}$ [M$_\odot$/h]')
+    # plt.axis('equal')
+    plt.plot([8e13, 3e15], [8e13, 3e15], '--k', label='one-to-one')
+    plt.legend(framealpha=0.0)
+
     plt.tight_layout()
 
     
     plt.figure()
     plt.loglog(spider_cat['m200c'][slct], redmapper_cat['m200c'][slct], '.')
-    plt.ylim([1e14, 1e16])
+    plt.ylim([8e13, 3e15])
+    plt.xlim([8e13, 3e15])
     plt.xlabel(r'SPIDERS M$_{200c}$ [Msun/h]')
     plt.ylabel('redMaPPer M$_{200c}$ [Msun/h]')
+    # plt.axis('equal')
+    plt.plot([8e13, 3e15], [8e13, 3e15], '--k', label='one-to-one')
+    plt.legend(framealpha=0.0)
     plt.tight_layout()
     
 
