@@ -34,7 +34,7 @@ galaxy_type 1
 
 
 #What mag cut relative to Mstar?
-mstar_cut_offset 0
+mstar_cut_offset -0.5
 
 # what is galaxy color
 # 1 = g-r

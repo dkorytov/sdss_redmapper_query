@@ -1,0 +1,64 @@
+
+cosmology_name wmap7
+richness_mass_author Simet_mean
+
+######## Query Params ##############
+
+# where all the data files are stored
+# such as query results, background estimates, etc
+query_data_folder data/normal_wmap7_spider_mean_bcg/query_results/
+
+
+randoms_query false
+clusters_query true
+spider_clusters true
+spider_mean true
+spider_bcg_center true
+spider_mass_from_richness false
+
+
+# should the max number of queryable random points
+# random points be used? Setting it true ignores the
+# the value in random_size
+
+cluster_size_max true
+cluster_size  5000
+cluster_start 0
+
+random_size_max true
+random_size  2000
+random_start 0
+
+
+
+
+# should only galaxies be selected or all?
+query_galaxy_only true
+
+# to how many r200 should be queried around clusters?
+# NOTE: anything greater than 1.0 requires to be queried
+# using galaxies only. Oherwise the return limit is
+# exceed. 
+r200_factor 1.0
+
+######## Processing Param #############
+
+# should the background be forced to be calculated?
+# the background only calculates once.
+
+
+background_folder data/rad_profile_mstar0_wmap7/background/
+
+profile_type 
+
+######## Graphs Param ##################
+
+
+z_bins       10
+z_bins_start 0.0
+z_bins_end   0.6
+
+mass_bins        10
+mass_bins_start  13.0
+mass_bins_end    16.0
+

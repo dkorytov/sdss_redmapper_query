@@ -4,13 +4,16 @@
 # where all the data files are stored
 # such as query results, background estimates, etc
 
-#query_data_folder data/normal_mask/query_results/
-query_data_folder data/normal_wmap7_simet_crit_randoms/query_results/
+
+query_data_folder data/normal_wmap7_spider_mean_bcg/query_results/
+
+# No author for richness -> mass
+# richness_mass_author Simet_mean
 
 # ingore below value and try to load as many possible 
 query_cluster_all true
 # how many clusters to load
-query_cluster_num 1000
+query_cluster_num 4000
 # gal = redmapper clusters, rnd = redmapper random fields 
 query_type gal
 
@@ -19,7 +22,7 @@ query_type gal
 cosmology_name wmap7
 
 ###### save radial profile file ########
-result_folder data/wmap7_rnd_clusters/result/
+result_folder data/rad_profile_mstar-0.5_wmap7_spider_mean_bcg/result/
 
 
 ######## Processing Param #############
@@ -34,7 +37,7 @@ galaxy_type 1
 
 
 #What mag cut relative to Mstar?
-mstar_cut_offset 0
+mstar_cut_offset -0.5
 
 # what is galaxy color
 # 1 = g-r
@@ -56,8 +59,7 @@ galaxy_mag_lim2 -6 4 101
 # 2 = radial profile by luminosity 
 galaxy_weight 1
 background_folder data/test/background/
-background_r200_factor 1.1 
-background_force  true
+background_force  false
 background_all false
 background_num 10000	       
 

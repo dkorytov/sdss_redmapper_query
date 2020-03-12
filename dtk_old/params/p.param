@@ -1,0 +1,13 @@
+
+data_folder sdss_pulls
+
+make_background false
+make_background_count 3000
+
+mass_bins 5
+mass_start 13
+mass_end   16
+
+z_bins    10
+z_start   0
+z_end     0.6
