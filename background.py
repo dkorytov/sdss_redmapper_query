@@ -99,8 +99,8 @@ def lambda_to_m200m_Simet(l, z):
     # m200m has h^-1 dependence, with h=1.0
     # eq 28
     # scatter, alpha = 0.25, log normal
-    m200 = 10**14.344*(l/40.0)**1.33
-    return m200
+    m200 = 10**14.344*(l/40.0)**1.33 
+    return m200 
 
 def lambda_to_m200m_Baxter(l, z):
     # Baxter et al
@@ -115,15 +115,15 @@ def lambda_to_m200m_Baxter(l, z):
     z_0 = 0.25
     sigma_lnM = 0.3
     #page 16
-    ln_A = 33.15
-    alpha = 1.0
-    lambda_0 = 35
-    beta = 1.0
-    z_0 = 0.25
-    sigma_lnM = 0.25
+    # ln_A = 33.15
+    # alpha = 1.0
+    # lambda_0 = 35
+    # beta = 1.0
+    # z_0 = 0.25
+    # sigma_lnM = 0.25
 
     ln_m200 = ln_A + alpha*np.log(l/lambda_0) + beta*np.log((1+z)/(1+z_0))-0.5*sigma_lnM**2
-    return np.exp(ln_m200)
+    return np.exp(ln_m200) *0.7
 
 def lambda_to_m200c_Rykoff(l, z):
     # Rykoff et al, 2012 (2018 arxiv)
@@ -137,12 +137,85 @@ def lambda_to_m200m_Rykoff(l, z):
     m200 = 1e14*np.exp(1.72+1.08*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
     return m200
 
-def lambda_to_m200c_Baxter(l, z):
-    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z), z)
+def lambda_to_m200m_Murata(l, z):
+    # https://iopscience.iop.org/article/10.3847/1538-4357/aaaab8/pdf
+    A = 3.207
+    B = 0.993
+    M_pivot = 3e14
+    # <ln l >(M) = A + B*ln(M/M_pivot)
+    # <ln M/M_pivot>(l) = (ln l -A )/B
+    return (np.log(l) - A)/B
 
-def lambda_to_m200c_Simet(l, z):
-    return m200m_to_m200c(lambda_to_m200m_Simet(l, z), z)
+def lambda_to_m200c_Capasso(l, z):
+    # https://arxiv.org/pdf/1812.06094.pdf
+    A = 38.6
+    B = 0.99
+    M_pivot = 1e14
+    z_pivot = 0.18
+    gamma = -1.13
+    # lambda = A*(m200c/mpiv)**B((1+z)/(1+z_piv)**gamma
+    # (m200c/mpiv)**B = 1/A*lambda ((1+z_piv)/(1+z))**-gamma
+    # m200c = np.pow(1/A*lambda ((1+z_piv)/(1+z))**-gamma, 1/B)*m_piv
+    return np.pow(1.0/A * l * ((1.0+z_piv)/(1+z))**-gamma, 1.0/B)*m_piv
 
+def lambda_to_m200x_Farahi(l, z):
+    pass
+
+def lambda_to_m200c_Saro2015(l, z):
+    B = 1.14
+    C = 0 #c = 0.73 +/- 0.77, which is the same as C=0
+    # ln(lambda) = B*ln(M500c)
+    
+    # ln M500c = ln(lambda)/B
+    M500c = np.exp(np.log(l)/B)
+    return m500c_to_m200c(M500c)
+
+def lambda_to_m200c_Saro2017(l, z):
+    pass
+def lambda_to_m200m_Melchior(l, z):
+    M200m = None
+    pass
+
+def lambda_to_m200m_Murata(l, z):
+    M200m = None
+    pass
+
+def lambda_to_m200c_Capasso(l, z):
+    M_piv = 3e14
+    z_piv = 0.18
+    A = 38.6
+    B = 0.99
+    gamma = -1.13
+    # lambda = A*(m200c/mpiv)**B*((1+z)/(1+zpiv))**gamma
+    m200c = np.pow( 1.0/A*((1+z_piv)/(1+z))**-gamma, -B)
+    return m200c
+
+def lambda_to_m200c_Bleem(l, z):
+    A = 76.9
+    B = 1.020
+    C = 0 # 0.29+/-0.27 ~ 0
+    # lambda = np.log(A) + B*np.log(M500c/3e14)+C*np.log(E(z)/E(z=0.6))
+    
+    m500c = 3e14 * np.exp((l - np.log(A))/B)
+    return m500c_to_m200c(M500c)
+
+def lambda_to_m200m_McClintock(l, z):
+    # convert sdss richness into DES y1 richness
+    l = 1.075268*l 
+    M0= 3.081e14
+    F = 1.356
+    G = -0.3
+    m200m = M0*(l/40)**F*((1+z)/1.35)**G 
+    return m200m *0.7 # Msun -> Msun/h
+
+def lambda_to_m200c_McClintock(l, z):
+    return m200m_to_m200c(lambda_to_m200m_McClintock(l, z), z)
+
+def lambda_to_m200c_Farahi(l, z):
+    M30 = 1.56e14
+    alpha = 1.31
+    M200c = np.exp(np.log(M30) + alpha*np.log(l/30.0))
+    return M200c * 0.7 # Msun -> Msun/h
 
 def m200m_to_m200c(m200m, z):
     #TODO More Accurate translation
@@ -157,6 +230,24 @@ def m200c_to_m200m(m200c, z):
     M200m_col, R200m_col, c200m_col = mass_adv.changeMassDefinitionCModel(m200c, z,
                                                                           "200c","200m", c_model='child18')#cat['sod_cdelta']
     return M200c_col
+def m500c_to_m200c(m500c, z):
+    cosmology.setCosmology('WMAP7')
+    M200m_col, R200m_col, c200m_col = mass_adv.changeMassDefinitionCModel(m500c, z,
+                                                                          "500c","200c", c_model='child18')#cat['sod_cdelta']
+    return M200c_col
+
+def lambda_to_m200c_Baxter(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z), z)
+
+def lambda_to_m200c_Simet(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Simet(l, z), z)
+
+def lambda_to_m200c_Murata(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Murata(l, z), z)
+
+def lambda_to_m200m_Capasso(l, z):
+    m200c = lambda_to_m200m_Cappasso(l, z)
+    return m200c_to_200m(m200c, z)
 
 def crit_density(z): #Msun/h /kpc^3
     gcm3_to_msunkpc3 = 1.477543e31
