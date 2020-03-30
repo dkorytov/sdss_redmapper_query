@@ -113,9 +113,8 @@ def plot_richness_mass_relation():
     
     #header list can be found in http://arxiv.org/pdf/1303.3562v2.pdf
     hdulist = pyfits.open("redmapper_dr8_public_v6.3_catalog.fits")
-    hdurnd  = pyfits.open("redmapper_dr8_public_v6.3_randoms.fits")
     tdata =  hdulist[1].data
-    rdata =  hdurnd[1].data
+
     # red_ra = tdata.field('ra')
     # red_dec= tdata.field('dec')
     red_z  = tdata.field('z_lambda')
@@ -171,6 +170,32 @@ def plot_richness_mass_relation():
     plt.show()
     
 
+def plot_richness_mass_relation2():
+    richness = np.logspace(np.log10(20), np.log10(300), 100)
+    z = 0.22
+    # simet
+    # rykoff
+    # baxter
+    # McClintock
+    # Farahi
+    
+    rykoff = background.lambda_to_m200c_Rykoff(richness, z)
+    simet = background.lambda_to_m200c_Simet(richness,   z)
+    baxter = background.lambda_to_m200c_Baxter(richness, z)
+    farahi = background.lambda_to_m200c_Farahi(richness, z)
+    mcclintock = background.lambda_to_m200c_McClintock(richness, z)
+
+    plt.figure()
+    plt.plot(richness, rykoff, label='Rykoff+2012')
+    plt.plot(richness, baxter, label='Baxter2016')
+    plt.plot(richness, farahi, label='Farahi+2016')
+    plt.plot(richness, simet, label='Simet+2017')
+    plt.plot(richness, mcclintock, label='McClintock+2018')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend()
+    plt.tight_layout()
     
 if __name__ == "__main__":
-    plot_richness_mass_relation()
+    plot_richness_mass_relation2()
+    plt.show()
