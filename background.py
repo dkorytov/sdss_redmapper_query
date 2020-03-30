@@ -137,6 +137,13 @@ def lambda_to_m200m_Rykoff(l, z):
     m200 = 1e14*np.exp(1.72+1.08*np.log(l/60.0))*0.7 #the the 0.7 is for Msun/h70 not Msun/h100
     return m200
 
+def lambda_to_m200c_Baxter(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z), z)
+
+def lambda_to_m200c_Simet(l, z):
+    return m200m_to_m200c(lambda_to_m200m_Simet(l, z), z)
+
+
 def m200m_to_m200c(m200m, z):
     #TODO More Accurate translation
     cosmology.setCosmology('WMAP7')
@@ -150,12 +157,6 @@ def m200c_to_m200m(m200c, z):
     M200m_col, R200m_col, c200m_col = mass_adv.changeMassDefinitionCModel(m200c, z,
                                                                           "200c","200m", c_model='child18')#cat['sod_cdelta']
     return M200c_col
-
-def lambda_to_m200c_Baxter(l, z):
-    return m200m_to_m200c(lambda_to_m200m_Baxter(l, z), z)
-
-def lambda_to_m200c_Simet(l, z):
-    return m200m_to_m200c(lambda_to_m200m_Simet(l, z), z)
 
 def crit_density(z): #Msun/h /kpc^3
     gcm3_to_msunkpc3 = 1.477543e31

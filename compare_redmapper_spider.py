@@ -114,9 +114,10 @@ def find_match(spider_cat, redmapper_cat):
     print(np.sum(spider_cat['z']<0.35))
     redmapper_old = redmapper_cat
     redmapper_cat = select_dict(redmapper_cat, redmapper_indexes)
-    mass_estimate_spider(spider_cat)
-    # mass_esitmate_redmapper(redmapper_cat)
-
+    # mass_estimate_spider(spider_cat)
+    mass_esitmate_redmapper(redmapper_cat)
+    mass_esitmate_redmapper(spider_cat)
+    
     print(redmapper_cat.keys())
     a = spider_cat['m200m'][slct]
     b = redmapper_cat['m200m'][slct]
@@ -147,8 +148,8 @@ def find_match(spider_cat, redmapper_cat):
     xmax =max(xlim[1], ylim[1])
     xmin = min(xlim[0], ylim[1])
     plt.plot([xmin, xmax], [xmin, xmax], '--k')
-    plt.xlabel('SPIDERS redshift')
-    plt.ylabel('XCS redshift')
+    plt.xlabel('DES Redmapper redshift')
+    plt.ylabel('SDSS Redmapper redshift')
     plt.tight_layout()
     
     # plt.figure()
@@ -158,24 +159,27 @@ def find_match(spider_cat, redmapper_cat):
     # plt.xlabel('RA [deg]')
     # plt.ylabel('Dec [deg]')
     # plt.tight_layout()
-    a=1.0/(1+spider_cat['z'][slct])        
-    plt.figure()
-    plt.ylim([1e14, 3e15])
-    plt.xlim([1e14, 3e15])
-    plt.loglog(spider_cat['m200m'][slct], redmapper_cat['m200m'][slct], '.')
-    plt.xlabel(r'SPIDERS M$_{200m}$ [M$_\odot$/h]')
-    plt.ylabel('XCS M$_{200m}$ [M$_\odot$/h]')
-    # plt.axis('equal')
-    plt.plot([8e13, 3e15], [8e13, 3e15], '--k', label='one-to-one')
-    plt.legend(framealpha=0.0)
-    plt.tight_layout()
+    # a=1.0/(1+spider_cat['z'][slct])        
+    # plt.figure()
+    # plt.ylim([1e14, 3e15])
+    # plt.xlim([1e14, 3e15])
+    # plt.loglog(spider_cat['m200m'][slct], redmapper_cat['m200m'][slct], '.')
+    # plt.xlabel(r'SPIDERS M$_{200m}$ [M$_\odot$/h]')
+    # plt.ylabel('XCS M$_{200m}$ [M$_\odot$/h]')
+    # # plt.axis('equal')
+    # plt.plot([8e13, 3e15], [8e13, 3e15], '--k', label='one-to-one')
+    # plt.legend(framealpha=0.0)
+    # plt.tight_layout()
 
 
     plt.figure()
 
-    plt.plot(spider_cat['z'][slct], redmapper_cat['m200m'][slct]/spider_cat['m200m'][slct], '.')
+    plt.plot(spider_cat['z'][slct], spider_cat['lambda'][slct]/redmapper_cat['lambda'][slct], '.')
+    plt.axhline(1.0, ls='--', color='k')
     plt.xlabel('redshift')
-    plt.ylabel('XCS M$_{200m, richness}$/SPIDERS M$_{200m}$')
+    # plt.ylabel('XCS M$_{200m, richness}$/SPIDERS M$_{200m}$')
+    plt.ylabel('DES Richness/SDSS Richness')
+    
     plt.tight_layout()
     
     # plt.figure()
@@ -190,9 +194,15 @@ def find_match(spider_cat, redmapper_cat):
     # plt.tight_layout()
 
     plt.figure()
-    plt.loglog(spider_cat['m200m'][slct], redmapper_cat['lambda'][slct], '.')
-    plt.xlabel(r'SPIDER m200m')
-    plt.ylabel('redMaPPer Richness')
+    plt.loglog(spider_cat['lambda'][slct], redmapper_cat['lambda'][slct], '.')
+    xlim = plt.xlim()
+    ylim = plt.ylim()
+    xmax =max(xlim[1], ylim[1])
+    xmin = min(xlim[0], ylim[1])
+    plt.plot([xmin, xmax], [xmin, xmax], '--k')
+
+    plt.xlabel(r'redmapper SDSS richness')
+    plt.ylabel('redmapper DES richness')
     plt.tight_layout()
 
 
@@ -367,6 +377,7 @@ def compare_redmapper_spider():
     spider_cat = load_spider_fits("/data/a/cpac/dkorytov/data/spiders/catCluster-SPIDERS_RASS_CLUS-v2.0.fits")
     spider_bcg_cat = load_spiders_bcg_fits("/data/a/cpac/dkorytov/data/spiders/SpidersXclusterBCGs-v2.0.fits")
     redmapper_cat = load_redmapper_cluster_fits("/data/a/cpac/dkorytov/data/redmapper/redmapper_dr8_public_v6.3_catalog.fits.gz")
+    redmapper_des_cat = load_redmapper_cluster_fits("/data/a/cpac/dkorytov/data/redmapper/redmapper_sva1_public_v6.3_catalog.fits.gz")
     combine_spiders_bcg(spider_cat, spider_bcg_cat)
 
     # plt.figure()
@@ -379,7 +390,7 @@ def compare_redmapper_spider():
     # plt.plot(spider_cat['ra'], spider_cat['dec'], '.r')
     # spider_cat = xcs_cat
     # redmapper_cat = xcs_cat
-    find_match(spider_cat, redmapper_cat)
+    find_match(redmapper_des_cat, redmapper_cat)
     
 
 if __name__ == "__main__":
