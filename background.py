@@ -88,6 +88,14 @@ def lambda_to_m200( l, z, richness_mass_author="Rykoff_crit"):
         return  lambda_to_m200m_Simet(l, z)
     elif richness_mass_author == "Baxter_mean":
         return  lambda_to_m200m_Baxter(l, z)
+    elif richness_mass_author == 'McClintock_mean':
+        return lambda_to_m200m_McClintock(l, z)
+    elif richness_mass_author == 'McClintock_crit':
+        return lambda_to_m200c_McClintock(l, z)
+    elif richness_mass_author == 'Farahi_mean':
+        return lambda_to_m200m_Farahi(l, z)
+    elif richness_mass_author == 'Farahi_crit':
+        return lambda_to_m200c_Farahi(l, z)
     else:
         print(richness_mass_author, "isn't a on the list of defined richness-mass relations")
         raise KeyError("\'{}\' isn't a on the list of defined richness-mass relations".format(richness_mass_author))
