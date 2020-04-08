@@ -143,16 +143,39 @@ def get_label(param_fname):
 def compare_zmrs(param_fname1, param_fname2):
     zmr1 = get_zmr(param_fname1)
     zmr2 = get_zmr(param_fname2)
-    plot_zmr(zmr1)
-    plot_zmr(zmr2)
-    plot_zmrs(zmr1, zmr2)
+    # plot_zmr(zmr1)
+    # plot_zmr(zmr2)
+    # plot_zmrs(zmr1, zmr2)
     plot_zmrs2(zmr1, zmr2)
     
 
 if __name__ == "__main__":
+    
     if len(sys.argv) > 2:
         compare_zmrs(sys.argv[1], sys.argv[2])
         dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
+    elif len(sys.argv) == 2:
+        plot_name = sys.argv[1]
+        if plot_name == "Simet_Simet":
+            # arg1 = 'params/rad_profile/mstar0_wmap7_simet_mean3.param'
+            arg1 = 'params/rad_profile/mstar@mstarval@_wmap7_simet_crit3.param'
+            arg2 = 'params/rad_profile/redmapper/high_richness/@mstarval@_simet_crit.param'
+            # arg2 = 'params/rad_profile/redmapper/mcclintock/@mstarval@_cirt.param'
+            for mstar in ['-1', '-0.5', '0', '0.5', '1']:
+                arg1_mstar = arg1.replace('@mstarval@', mstar)
+                arg2_mstar = arg2.replace('@mstarval@', mstar)
+                compare_zmrs(arg1_mstar, arg2_mstar)
+                plt.show()
+            
+        if plot_name == "Simet_McClintock":
+            arg1 = 'params/rad_profile/mstar@mstarval@_wmap7_simet_mean3.param'
+            # arg2 = 'params/rad_profile/redmapper/high_richness/@mstarval@_simet_crit.param'
+            arg2 = 'params/rad_profile/redmapper/mcclintock/@mstarval@_crit.param'
+            for mstar in [ '-1', '-0.5', '0', '0.5', '1']:
+                arg1_mstar = arg1.replace('@mstarval@', mstar)
+                arg2_mstar = arg2.replace('@mstarval@', mstar)
+                compare_zmrs(arg1_mstar, arg2_mstar)
+                plt.show()
     else:
         arg1 = 'params/rad_profile/mstar0_wmap7_simet_mean4.param'
         # arg2 = 'params/rad_profile/mstar0_wmap7_spider_mean_bcg.param'
