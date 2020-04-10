@@ -498,12 +498,13 @@ for i in range(0,z_bins_num-1):
             h_bkgd_Ngal_var[i,j]=np.std(h_bkgd_Ngal_var[i,j])
             h_bkgd_Ngal_err[i,j]=h_bkgd_Ngal_var[i,j]/np.sqrt(h_cnt[i,j])
             h_clr_mg[i,j]=h_clr_mg[i,j]/np.float(h_cnt[i,j])
-            h_radial_profile_err2[i,j]=np.sqrt(h_radial_profile_cnt[i,j])/(np.float(h_cnt[i,j])*bin_area)
+            h_radial_profile_err2[i,j]=np.sqrt(h_radial_profile_cnt[i,j]+1.0)/(np.float(h_cnt[i,j])*bin_area) # possion count error
             #h_bkgd_Ngal_err[i,j] = h_radial_profile_err2[i,j]
             for k in range(0,radial_bin_num-1):
                 h_zm_rad_clr_mg[i,j,k]=h_zm_rad_clr_mg[i,j,k]/h_zm_rad_clr_mg_cnt[i,j,k]
                 h_radial_profile_var[i,j,k]= np.std(np.array(h_radial_profile_var[i,j,k])/(h_cnt[i,j]*bin_area[k]))
-                h_radial_profile_err[i,j,k]=h_radial_profile_var[i,j,k] #/h_cnt[i,j]
+                h_radial_profile_err[i,j,k]=h_radial_profile_var[i,j,k]/np.sqrt(h_cnt[i,j]) # error on the mean
+                h_radial_profile_err2[i,j][k] = np.sqrt(h_radial_profile_err[i,j,k]**2 + h_radial_profile_err2[i,j,][k]**2) # combo error w/ mean error + counting error
         else:
             h_radial_profile[i,j]=h_radial_profile[i,j]/np.nan
             h_bkgd_Ngal_var[i,j]=0.0
